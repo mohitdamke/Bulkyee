@@ -5,6 +5,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.bulkyee.screens.AllOrdersScreen
+import com.example.bulkyee.screens.EditProfileScreen
 import com.example.bulkyee.screens.HomeScreen
 import com.example.bulkyee.screens.InformationScreen
 import com.example.bulkyee.screens.LoginScreen
@@ -18,7 +19,7 @@ import com.example.bulkyee.screens.SplashScreen
 fun NavigationControl() {
     val navController = rememberNavController()
 
-    NavHost(navController = navController, startDestination = Routes.HomeScreen.routes) {
+    NavHost(navController = navController, startDestination = Routes.SplashScreen.routes) {
 
         composable(route = Routes.SplashScreen.routes) {
             SplashScreen(navController = navController)
@@ -46,6 +47,9 @@ fun NavigationControl() {
         }
         composable(route = Routes.AllOrdersScreen.routes) {
             AllOrdersScreen(navController = navController)
+        }
+        composable(route = Routes.EditProfileScreen.routes) {
+            EditProfileScreen(navController = navController)
         }
 //        composable(route = Routes.OrderScreen.routes) {
 //            OrderScreen(navController = navController)

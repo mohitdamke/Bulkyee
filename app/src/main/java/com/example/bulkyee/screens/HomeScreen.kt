@@ -144,13 +144,6 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val scope = rememberCoroutineScope()
 
-
-
-
-
-
-
-
     ModalNavigationDrawer(
         drawerState = drawerState,
         drawerContent = {

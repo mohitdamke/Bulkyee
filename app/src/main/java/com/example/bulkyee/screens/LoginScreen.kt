@@ -33,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bulkyee.R
+import com.example.bulkyee.data.PreferencesHelper
 import com.example.bulkyee.dimensions.FamilyDim
 import com.example.bulkyee.dimensions.FontDim
 import com.example.bulkyee.navigation.Routes
@@ -43,12 +44,22 @@ import com.google.android.gms.common.api.ApiException
 @Composable
 fun LoginScreen(modifier: Modifier = Modifier, navController: NavController) {
     val loginViewModel: LoginViewModel = viewModel()
+    val context = LocalContext.current
     val activity = LocalContext.current as Activity
     val isLoading by loginViewModel.isLoading.observeAsState(false)
     val isLoggedIn by loginViewModel.isUserLoggedIn.observeAsState(initial = false)
     // Check if the user is already logged in
     LaunchedEffect(Unit) {
         if (isLoggedIn) {
+            navController.navigate(Routes.InformationScreen.routes) {
+                popUpTo(0) // Clear backstack
+            }
+        }
+    }
+
+    // Check if user setup is already completed
+    LaunchedEffect(Unit) {
+        if (PreferencesHelper.isUserSetupCompleted(context)) {
             navController.navigate(Routes.HomeScreen.routes) {
                 popUpTo(0) // Clear backstack
             }
@@ -64,7 +75,7 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController) {
             val account = task.getResult(ApiException::class.java)
             loginViewModel.firebaseAuthWithGoogle(account) { success ->
                 if (success) {
-                    navController.navigate(Routes.HomeScreen.routes) {
+                    navController.navigate(Routes.InformationScreen.routes) {
                         popUpTo(0) // Clear backstack
                     }
                 } else {

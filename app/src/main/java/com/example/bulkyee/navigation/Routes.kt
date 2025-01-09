@@ -9,6 +9,7 @@ sealed class Routes(val routes: String) {
     object SettingScreen : Routes("SettingScreen")
     object AllOrdersScreen : Routes("AllOrdersScreen")
     object OrderPaymentScreen : Routes("OrderPaymentScreen")
+    object EditProfileScreen : Routes("EditProfileScreen")
     object EditItemScreen : Routes("EditItemScreen/{EditItemId}")
     object OrderScreen : Routes("OrderScreen")
     object OrderDetail : Routes("OrderDetail/{OrderId}")

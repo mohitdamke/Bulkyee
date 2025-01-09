@@ -22,7 +22,7 @@ import kotlinx.coroutines.tasks.await
 import java.util.UUID
 import javax.inject.Inject
 
-class LoginViewModel @Inject constructor() : ViewModel() {
+class LoginViewModel : ViewModel() {
 
     private lateinit var googleSignInClient: GoogleSignInClient
     private val auth: FirebaseAuth = FirebaseAuth.getInstance()

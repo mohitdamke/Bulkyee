@@ -19,25 +19,47 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Home
+import androidx.compose.material.icons.filled.Info
+import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.ProductionQuantityLimits
+import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.Home
+import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.ProductionQuantityLimits
+import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material.icons.rounded.MoreVert
 import androidx.compose.material.icons.rounded.Person2
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.ModalDrawerSheet
+import androidx.compose.material3.ModalNavigationDrawer
+import androidx.compose.material3.NavigationDrawerItem
+import androidx.compose.material3.NavigationDrawerItemDefaults
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -59,10 +81,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bulkyee.R
 import com.example.bulkyee.data.Item
+import com.example.bulkyee.data.NavigationItems
 import com.example.bulkyee.dimensions.FamilyDim
 import com.example.bulkyee.dimensions.FontDim
 import com.example.bulkyee.navigation.Routes
 import com.example.bulkyee.viewmodel.HomeViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -83,76 +107,194 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
         homeViewModel.fetchItems()
     }
 
-    Scaffold(
-        modifier = modifier
-            .fillMaxSize()
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
-        topBar = {
-            TopAppBar(
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Black,
-                    titleContentColor = White,
-                    actionIconContentColor = White,
-                    navigationIconContentColor = White,
-                    scrolledContainerColor = Black,
-                ),
-                title = {
-                    Text(
-                        text = "Bulkyee",
-                        maxLines = 1,
-                        letterSpacing = 1.sp,
-                        textAlign = TextAlign.Center,
-                        fontSize = FontDim.extraLargeTextSize,
-                        overflow = TextOverflow.Visible,
-                        fontFamily = FamilyDim.Bold,
-                    )
-                },
-                scrollBehavior = scrollBehavior,
-                actions = {
-                    Icon(
-                        Icons.Rounded.Search,
-                        contentDescription = "",
+
+    ///List of Navigation Items that will be clicked
+    val navigationItems = listOf(
+        NavigationItems(
+            title = "Home",
+            selectedIcon = Icons.Filled.Home,
+            unselectedIcon = Icons.Outlined.Home,
+            route = Routes.HomeScreen.routes
+        ),
+        NavigationItems(
+            title = "Profile",
+            selectedIcon = Icons.Filled.Person,
+            unselectedIcon = Icons.Outlined.Person,
+            route = Routes.ProfileScreen.routes
+        ),
+        NavigationItems(
+            title = "My Orders",
+            selectedIcon = Icons.Filled.ProductionQuantityLimits,
+            unselectedIcon = Icons.Outlined.ProductionQuantityLimits,
+            route = Routes.AllOrdersScreen.routes,
+        ),
+        NavigationItems(
+            title = "Settings",
+            selectedIcon = Icons.Filled.Settings,
+            unselectedIcon = Icons.Outlined.Settings,
+            route = Routes.SettingScreen.routes
+        )
+    )
+
+    //Remember Clicked index state
+    var selectedItemIndex by rememberSaveable {
+        mutableStateOf(0)
+    }
+
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val scope = rememberCoroutineScope()
+
+
+
+
+
+
+
+
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet {
+                Spacer(modifier = Modifier.height(16.dp)) //space (margin) from top
+                navigationItems.forEachIndexed { index, item ->
+                    NavigationDrawerItem(
+                        label = { Text(text = item.title) },
+                        selected = index == selectedItemIndex,
+                        onClick = {
+                            selectedItemIndex = index
+                            navController.navigate(item.route) {
+                                // Optional: Pop up the back stack to avoid navigating back to this screen
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                            scope.launch {
+                                drawerState.close()
+                            }
+                        },
+                        icon = {
+                            Icon(
+                                imageVector = if (index == selectedItemIndex) {
+                                    item.selectedIcon
+                                } else item.unselectedIcon,
+                                contentDescription = item.title
+                            )
+                        },
+                        badge = {  // Show Badge
+                            item.badgeCount?.let {
+                                Text(text = item.badgeCount.toString())
+                            }
+                        },
                         modifier = Modifier
-                            .size(30.dp)
-                            .clickable { navController.navigate(Routes.SearchScreen.routes) },
-                        tint = White
+                            .padding(NavigationDrawerItemDefaults.ItemPadding)
+                            .clickable {  }
                     )
-                    Spacer(modifier = Modifier.padding(10.dp))
-                    Icon(
-                        Icons.Rounded.Person2,
-                        contentDescription = "",
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clickable { navController.navigate(Routes.OrderScreen.routes) },
-                        tint = White
-                    )
-                },
-            )
+                }
+
+            }
         },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { navController.navigate(Routes.OrderPaymentScreen.routes) },
-                containerColor = Black,
-                contentColor = White,
-            ) {
-                Icon(Icons.Filled.Add, contentDescription = "View Cart")
-            }
-        }
-    ) { paddingValues ->
-        Box(
-            modifier = Modifier
+        gesturesEnabled = true
+    ) {
+
+
+        Scaffold(
+            modifier = modifier
                 .fillMaxSize()
-                .padding(10.dp)
-        ) {
-            if (isLoading) {
-                // Show loading indicator
-                CircularProgressIndicator(
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .size(50.dp)
-                ) // Adjust the size to prevent it from taking full size)
+                .nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
+                TopAppBar(
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = Black,
+                        titleContentColor = White,
+                        actionIconContentColor = White,
+                        navigationIconContentColor = White,
+                        scrolledContainerColor = Black,
+                    ),
+                    title = {
+                        Text(
+                            text = "Bulkyee",
+                            maxLines = 1,
+                            letterSpacing = 1.sp,
+                            textAlign = TextAlign.Center,
+                            fontSize = FontDim.extraLargeTextSize,
+                            overflow = TextOverflow.Visible,
+                            fontFamily = FamilyDim.Bold,
+                        )
+                    },
+                    scrollBehavior = scrollBehavior,
+                    actions = {
+                        Icon(
+                            Icons.Rounded.Search,
+                            contentDescription = "",
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clickable { navController.navigate(Routes.SearchScreen.routes) },
+                            tint = White
+                        )
+                        Spacer(modifier = Modifier.padding(10.dp))
+                        Icon(
+                            Icons.Rounded.Menu,
+                            contentDescription = "",
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clickable {
+                                    scope.launch {
+                                        drawerState.apply {
+                                            if (isClosed) open() else close()
+                                        }
+                                    }
+                                },
+                            tint = White
+                        )
+                    },
+                )
+            },
+            floatingActionButton = {
+                FloatingActionButton(
+                    onClick = { navController.navigate(Routes.OrderPaymentScreen.routes) },
+                    containerColor = Black,
+                    contentColor = White,
+                ) {
+                    Icon(Icons.Filled.Add, contentDescription = "View Cart")
+                }
             }
-            if (isError && items.isEmpty()) {
+        ) { paddingValues ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(10.dp)
+            ) {
+                if (isLoading) {
+                    // Show loading indicator
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .align(Alignment.Center)
+                            .size(50.dp)
+                    ) // Adjust the size to prevent it from taking full size)
+                }
+                if (isError && items.isEmpty()) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(10.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        // Show error message
+                        Text(
+                            text = "An error occurred while adding the item. Please try again.",
+                            color = Color.Red,
+                            fontSize = 18.sp,
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
+            }
+
+            // Show loading or no items message based on the state of the items list
+            if (isSuccess && items.isEmpty()) {
+
+                // Show "No items available" message
+                // Show a message indicating no items are available
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -160,46 +302,24 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
-                    // Show error message
+
                     Text(
-                        text = "An error occurred while adding the item. Please try again.",
-                        color = Color.Red,
-                        fontSize = 18.sp,
-                        modifier = Modifier.padding(16.dp)
+                        text = "No items available.",
+                        fontSize = FontDim.mediumTextSize,
+                        fontFamily = FamilyDim.Bold,
+                        color = Black
                     )
                 }
-            }
-        }
-
-        // Show loading or no items message based on the state of the items list
-        if (isSuccess && items.isEmpty()) {
-
-            // Show "No items available" message
-            // Show a message indicating no items are available
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(10.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
-            ) {
-
-                Text(
-                    text = "No items available.",
-                    fontSize = FontDim.mediumTextSize,
-                    fontFamily = FamilyDim.Bold,
-                    color = Black
-                )
-            }
-        } else if (isSuccess) {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-                    .padding(16.dp)
-            ) {
-                items(items) { item ->
-                    ItemCard(item = item, navController = navController, context = context)
+            } else if (isSuccess) {
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                        .padding(16.dp)
+                ) {
+                    items(items) { item ->
+                        ItemCard(item = item, navController = navController, context = context)
+                    }
                 }
             }
         }

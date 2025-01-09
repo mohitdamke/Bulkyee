@@ -4,11 +4,14 @@ import androidx.compose.runtime.Composable
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.bulkyee.screens.AllOrdersScreen
 import com.example.bulkyee.screens.HomeScreen
 import com.example.bulkyee.screens.InformationScreen
 import com.example.bulkyee.screens.LoginScreen
 import com.example.bulkyee.screens.OrderPaymentScreen
+import com.example.bulkyee.screens.ProfileScreen
 import com.example.bulkyee.screens.SearchScreen
+import com.example.bulkyee.screens.SettingScreen
 import com.example.bulkyee.screens.SplashScreen
 
 @Composable
@@ -35,9 +38,15 @@ fun NavigationControl() {
         composable(route = Routes.SearchScreen.routes) {
             SearchScreen(navController = navController)
         }
-//        composable(route = Routes.AddItemScreen.routes) {
-//            AddItemScreen(navController = navController)
-//        }
+        composable(route = Routes.ProfileScreen.routes) {
+            ProfileScreen(navController = navController)
+        }
+        composable(route = Routes.SettingScreen.routes) {
+            SettingScreen(navController = navController)
+        }
+        composable(route = Routes.AllOrdersScreen.routes) {
+            AllOrdersScreen(navController = navController)
+        }
 //        composable(route = Routes.OrderScreen.routes) {
 //            OrderScreen(navController = navController)
 //        }

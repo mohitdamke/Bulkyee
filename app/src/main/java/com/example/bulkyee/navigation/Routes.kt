@@ -1,10 +1,13 @@
 package com.example.bulkyee.navigation
 
-sealed class  Routes(val routes: String) {
+sealed class Routes(val routes: String) {
     object SplashScreen : Routes("SplashScreen")
     object LoginScreen : Routes("LoginScreen")
     object InformationScreen : Routes("InformationScreen")
     object HomeScreen : Routes("HomeScreen")
+    object ProfileScreen : Routes("ProfileScreen")
+    object SettingScreen : Routes("SettingScreen")
+    object AllOrdersScreen : Routes("AllOrdersScreen")
     object OrderPaymentScreen : Routes("OrderPaymentScreen")
     object EditItemScreen : Routes("EditItemScreen/{EditItemId}")
     object OrderScreen : Routes("OrderScreen")

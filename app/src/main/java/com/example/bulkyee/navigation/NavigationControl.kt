@@ -8,6 +8,7 @@ import com.example.bulkyee.screens.HomeScreen
 import com.example.bulkyee.screens.InformationScreen
 import com.example.bulkyee.screens.LoginScreen
 import com.example.bulkyee.screens.OrderPaymentScreen
+import com.example.bulkyee.screens.SearchScreen
 import com.example.bulkyee.screens.SplashScreen
 
 @Composable
@@ -31,9 +32,9 @@ fun NavigationControl() {
         composable(route = Routes.OrderPaymentScreen.routes) {
             OrderPaymentScreen(navController = navController)
         }
-//        composable(route = Routes.SearchScreen.routes) {
-//            SearchScreen(navController = navController)
-//        }
+        composable(route = Routes.SearchScreen.routes) {
+            SearchScreen(navController = navController)
+        }
 //        composable(route = Routes.AddItemScreen.routes) {
 //            AddItemScreen(navController = navController)
 //        }

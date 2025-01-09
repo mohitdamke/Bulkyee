@@ -166,7 +166,8 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                         color = Color.Red,
                         fontSize = 18.sp,
                         modifier = Modifier.padding(16.dp)
-                    )}
+                    )
+                }
             }
         }
 
@@ -224,7 +225,7 @@ fun ItemCard(context: Context, item: Item, navController: NavController) {
 //                if (decodedImage != null) {
 //                    rememberAsyncImagePainter(decodedImage)  // Use the decoded Bitmap
 //                } else {
-                    painterResource(id = R.drawable.ic_launcher_background)  // Placeholder image
+                painterResource(id = R.drawable.ic_launcher_background)  // Placeholder image
                 ,
                 contentDescription = "Item Image",
                 modifier = Modifier

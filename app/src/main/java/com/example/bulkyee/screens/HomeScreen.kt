@@ -376,16 +376,7 @@ fun ItemCard(context: Context, item: Item, navController: NavController) {
                     )
                 }
             }
-            Icon(
-                imageVector = Icons.Rounded.MoreVert,
-                contentDescription = "",
-                modifier = Modifier
-                    .size(30.dp)
-                    .clickable {
 
-                    },
-                tint = Gray
-            )
         }
     }
 

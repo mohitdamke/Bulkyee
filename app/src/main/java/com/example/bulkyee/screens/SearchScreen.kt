@@ -37,77 +37,102 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.bulkyee.data.Item
 import com.example.bulkyee.dimensions.FamilyDim
 import com.example.bulkyee.dimensions.FontDim
 import com.example.bulkyee.viewmodel.SearchViewModel
 
 @Composable
 fun SearchScreen(navController: NavController) {
-
-    val context = LocalContext.current
-    val searchViewModel: SearchViewModel = viewModel()
-    val searchResults by searchViewModel.searchResults.collectAsState()
-    val isLoading by searchViewModel.isLoading.collectAsState()
-    val errorMessage by searchViewModel.errorMessage.collectAsState()
-
-    var query by remember { mutableStateOf("") }
-
-    Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
-
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(paddingValues)
-                .padding(10.dp)
-        ) {
-
-            SearchOutlineText(
-                value = query,
-                onValueChange = {
-                    query = it
-                    searchViewModel.searchProducts(it)
-                    // Trigger search as query changes //
-                },
-                label = "Search",
-                icons = Icons.Default.Search
-            )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // Show loading indicator when loading
-            if (isLoading) {
-                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-            }
-
-            // Show error message if there is an error
-            if (errorMessage != null) {
-                Text(
-                    text = errorMessage ?: "",
-                    color = Color.Red,
-                    modifier = Modifier.padding(16.dp)
-                )
-            }
-
-            // Check if there are no results and show "No results found" message
-            if (searchResults.isEmpty() && !isLoading) {
-                Text(
-                    text = "No search results found.",
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(16.dp),
-                    color = Color.Gray,
-                )
-            } else {
-
-                // Display search results
-                LazyColumn(modifier = Modifier.fillMaxSize()) {
-                    items(searchResults) { item ->
-                        ItemCard(navController = navController, context = context, item = item)
-                    }
-                }
-            }
-        }
-    }
+//
+//    val context = LocalContext.current
+//    val searchViewModel: SearchViewModel = viewModel()
+//    val searchResults by searchViewModel.searchResults.collectAsState()
+//    val isLoading by searchViewModel.isLoading.collectAsState()
+//    val errorMessage by searchViewModel.errorMessage.collectAsState()
+//    var cart by remember { mutableStateOf(listOf<Item>()) }  // Cart state
+//
+//    var query by remember { mutableStateOf("") }
+//    // Add item to cart
+//    fun addToCart(item: Item) {
+//        cart = cart.toMutableList().apply {
+//            val index = indexOfFirst { it.itemId == item.itemId }
+//            if (index != -1) {
+//                this[index] = item  // Update quantity if item exists in cart
+//            } else {
+//                add(item)  // Add new item if it doesn't exist in cart
+//            }
+//        }
+//    }
+//
+//    // Remove item from cart
+//    fun removeFromCart(item: Item) {
+//        cart = cart.toMutableList().apply {
+//            remove(item)  // Remove item from cart
+//        }
+//    }
+//    Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
+//
+//        Column(
+//            modifier = Modifier
+//                .fillMaxSize()
+//                .padding(paddingValues)
+//                .padding(10.dp)
+//        ) {
+//
+//            SearchOutlineText(
+//                value = query,
+//                onValueChange = {
+//                    query = it
+//                    searchViewModel.searchProducts(it)
+//                    // Trigger search as query changes //
+//                },
+//                label = "Search",
+//                icons = Icons.Default.Search
+//            )
+//
+//            Spacer(modifier = Modifier.height(16.dp))
+//
+//            // Show loading indicator when loading
+//            if (isLoading) {
+//                CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
+//            }
+//
+//            // Show error message if there is an error
+//            if (errorMessage != null) {
+//                Text(
+//                    text = errorMessage ?: "",
+//                    color = Color.Red,
+//                    modifier = Modifier.padding(16.dp)
+//                )
+//            }
+//
+//            // Check if there are no results and show "No results found" message
+//            if (searchResults.isEmpty() && !isLoading) {
+//                Text(
+//                    text = "No search results found.",
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .padding(16.dp),
+//                    color = Color.Gray,
+//                )
+//            } else {
+//
+//                // Display search results
+//                LazyColumn(modifier = Modifier.fillMaxSize()) {
+//                    items(searchResults) { item ->
+//                        ItemCard(
+//                            item = item,
+//                            navController = navController,
+//                            context = context,
+//                            onAddToCart = { addToCart(it) },
+//                            onRemoveFromCart = { removeFromCart(it) },
+//                            cart = cart,
+//                        )                    }
+//                }
+//            }
+//        }
+//    }
 }
 
 

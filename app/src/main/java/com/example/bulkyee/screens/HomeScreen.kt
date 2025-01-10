@@ -1,6 +1,7 @@
 package com.example.bulkyee.screens
 
 import android.content.Context
+import android.system.Os.remove
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -19,21 +20,16 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ProductionQuantityLimits
+import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.ProductionQuantityLimits
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.Menu
-import androidx.compose.material.icons.rounded.MoreVert
-import androidx.compose.material.icons.rounded.Person2
 import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -41,6 +37,7 @@ import androidx.compose.material3.DrawerValue
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
@@ -56,6 +53,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -72,6 +70,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -87,6 +86,8 @@ import com.example.bulkyee.dimensions.FontDim
 import com.example.bulkyee.navigation.Routes
 import com.example.bulkyee.viewmodel.HomeViewModel
 import kotlinx.coroutines.launch
+import org.json.JSONObject
+import java.net.URLEncoder
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -96,15 +97,19 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
 
     // Pull-to-refresh state
     val isLoading by homeViewModel.isLoading.collectAsState(false)
+    val scope = rememberCoroutineScope()
     val isSuccess by homeViewModel.isSuccess.collectAsState(false)
     val isError by homeViewModel.isError.collectAsState(false)
     val items = homeViewModel.items.collectAsState().value
-    var totalAmount by remember { mutableIntStateOf(0) }  // Track total amount
+//    var items by remember { mutableStateOf<List<Item>>(emptyList()) }
+    val selectedItems = remember { mutableStateMapOf<String, Int>() }
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     LaunchedEffect(key1 = homeViewModel) {
-        homeViewModel.fetchItems()
+        scope.launch {
+            homeViewModel.fetchItems()
+        }
     }
 
 
@@ -138,11 +143,10 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
 
     //Remember Clicked index state
     var selectedItemIndex by rememberSaveable {
-        mutableStateOf(0)
+        mutableIntStateOf(0)
     }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    val scope = rememberCoroutineScope()
 
     ModalNavigationDrawer(
         drawerState = drawerState,
@@ -179,7 +183,7 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                         },
                         modifier = Modifier
                             .padding(NavigationDrawerItemDefaults.ItemPadding)
-                            .clickable {  }
+                            .clickable { }
                     )
                 }
 
@@ -243,13 +247,25 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
             },
             floatingActionButton = {
                 FloatingActionButton(
-                    onClick = { navController.navigate(Routes.OrderPaymentScreen.routes) },
+                    onClick = {
+                        val cartItems = items.filter { (selectedItems[it.itemId] ?: 0) > 0 }
+                        val cartData = cartItems.joinToString(",") {
+                            "${it.itemId}:${selectedItems[it.itemId] ?: 0}:${it.itemName}:${it.discountedPrice}:${it.realPrice}"
+                        }
+                        val encodedCartData = URLEncoder.encode(cartData, "UTF-8")
+                        navController.navigate(
+                            Routes.CheckOutScreen.routes.replace(
+                                oldValue = "{cartQueryParam}", newValue = encodedCartData
+                            )
+                        )
+                    },
                     containerColor = Black,
                     contentColor = White,
                 ) {
                     Icon(Icons.Filled.Add, contentDescription = "View Cart")
                 }
             }
+
         ) { paddingValues ->
             Box(
                 modifier = Modifier
@@ -311,7 +327,13 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                         .padding(16.dp)
                 ) {
                     items(items) { item ->
-                        ItemCard(item = item, navController = navController, context = context)
+                        ItemCard(
+                            item = item,
+                            quantity = selectedItems[item.itemId] ?: 0,
+                            onQuantityChange = { newQuantity ->
+                                selectedItems[item.itemId] = newQuantity
+                            }
+                        )
                     }
                 }
             }
@@ -320,9 +342,8 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
 }
 
 @Composable
-fun ItemCard(context: Context, item: Item, navController: NavController) {
+fun ItemCard(item: Item, quantity: Int, onQuantityChange: (Int) -> Unit) {
 
-//    val decodedImage = decodeBase64ToBitmap(item.imageUrl)
     Card(
         modifier = Modifier
             .fillMaxWidth()
@@ -334,12 +355,7 @@ fun ItemCard(context: Context, item: Item, navController: NavController) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter =
-//                if (decodedImage != null) {
-//                    rememberAsyncImagePainter(decodedImage)  // Use the decoded Bitmap
-//                } else {
-                painterResource(id = R.drawable.ic_launcher_background)  // Placeholder image
-                ,
+                painter = painterResource(id = R.drawable.ic_launcher_background), // Placeholder image
                 contentDescription = "Item Image",
                 modifier = Modifier
                     .clip(CircleShape)
@@ -375,10 +391,29 @@ fun ItemCard(context: Context, item: Item, navController: NavController) {
                         color = Gray
                     )
                 }
-            }
 
+                Spacer(modifier = Modifier.height(10.dp))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(onClick = { if (quantity > 0) onQuantityChange(quantity - 1) }) {
+                        Icon(
+                            Icons.Default.Remove,
+                            contentDescription = "Decrease Quantity"
+                        )
+                    }
+                    Text(
+                        text = "$quantity",
+                        fontSize = 16.sp,
+                        fontWeight = FontWeight.Bold
+                    )
+                    IconButton(onClick = { onQuantityChange(quantity + 1) }) {
+                        Icon(
+                            Icons.Default.Add,
+                            contentDescription = "Increase Quantity"
+                        )
+                    }
+                }
+            }
         }
     }
-
-
 }

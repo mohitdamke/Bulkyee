@@ -21,9 +21,12 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bulkyee.data.Item
 import com.example.bulkyee.data.PreferencesHelper
+import com.example.bulkyee.viewmodel.OrderViewModel
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 
 @Composable
@@ -33,59 +36,29 @@ fun AddressAndPaymentScreen(
 ) {
 
     val context = LocalContext.current
-    val sharedPreferences = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
-    val userInfo = PreferencesHelper.getUserInfo(context)
-    // Fetch user details from SharedPreferences
+    val orderViewModel: OrderViewModel = viewModel()
 
-    // Retrieve individual values from the map
-    val userName = userInfo["name"] ?: "No Name Found"
-    val userEmail = userInfo["email"] ?: "No Email Found"
-    val phoneNumber = userInfo["phoneNumber"] ?: "No Phone Number Found"
-    val shopName = userInfo["shopName"] ?: "No Shop Name Found"
-    val userAddress = userInfo["address"] ?: "No Address Found"
-
-
-    // Parse cart items outside LaunchedEffect, using remember
-    val cartItems = remember(cartQueryParam) {
-        cartQueryParam?.split(",")?.mapNotNull { cartEntry ->
-            try {
-                val parts = cartEntry.split(":")
-                Item(
-                    itemId = parts[0],
-                    quantity = parts[1].toInt(),
-                    itemName = parts[2],
-                    discountedPrice = parts[3].toInt(),
-                    realPrice = parts[4].toInt(),
-                    imageUrl = "" // Add if available
-                )
-            } catch (e: Exception) {
-                Log.e("AddressAndPaymentScreen", "Error parsing cart item: $cartEntry", e)
-                null
-            }
-        } ?: emptyList()
-    }
 
     // Logging cart items for debugging
-    Log.d("AddressAndPaymentScreen", "Parsed cartItems: $cartItems")
-
+    Log.d("AddressAndPaymentScreen", "Parsed cartItems: $cartQueryParam")
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-
         Text("Delivery Address:", fontWeight = FontWeight.Bold, fontSize = 18.sp)
-        Text(userAddress, modifier = Modifier.padding(8.dp))
+        // Replace with actual user address data
+        Text("User Address", modifier = Modifier.padding(8.dp))
 
         Text("Items:", fontWeight = FontWeight.Bold, fontSize = 18.sp)
 
-        if (cartItems.isEmpty()) {
+        if (cartQueryParam.isNullOrEmpty()) {
             Text("No items in the cart", modifier = Modifier.padding(8.dp))
         } else {
             LazyColumn(modifier = Modifier.weight(1f)) {
-                items(cartItems) { item ->
+                items(cartQueryParam.split(",")) { item ->
                     Text(
-                        text = "${item.itemName} x ${item.quantity} - ₹${item.discountedPrice * item.quantity}",
+                        text = item,
                         modifier = Modifier.padding(8.dp), color = Color.Black
                     )
                 }
@@ -97,38 +70,11 @@ fun AddressAndPaymentScreen(
         // Confirm order button
         Button(
             onClick = {
-                val orderId = System.currentTimeMillis().toString() // Generate unique order ID
-                val orderData = hashMapOf(
-                    "orderId" to orderId,
-                    "userName" to userName,
-                    "userEmail" to userEmail,
-                    "phoneNumber" to phoneNumber,
-                    "shopName" to shopName,
-                    "userAddress" to userAddress,
-                    "items" to cartItems.map {
-                        mapOf(
-                            "itemId" to it.itemId,
-                            "itemName" to it.itemName,
-                            "quantity" to it.quantity,
-                            "discountedPrice" to it.discountedPrice,
-                            "realPrice" to it.realPrice
-                        )
-                    },
-                    "status" to "Pending" // Initial status of the order
+                orderViewModel.placeOrder(
+                    context,
+                    cartQueryParam,
+                    navController
                 )
-
-                // Save order to Firestore
-                val db = FirebaseFirestore.getInstance()
-                db.collection("orders").document(orderId)
-                    .set(orderData)
-                    .addOnSuccessListener {
-                        Toast.makeText(context, "Order placed successfully!", Toast.LENGTH_SHORT)
-                            .show()
-                        navController.navigate("order_confirmation")
-                    }
-                    .addOnFailureListener {
-                        Toast.makeText(context, "Failed to place order.", Toast.LENGTH_SHORT).show()
-                    }
             },
             modifier = Modifier
                 .fillMaxWidth()

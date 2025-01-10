@@ -1,7 +1,5 @@
 package com.example.bulkyee.screens
 
-import android.content.Context
-import android.system.Os.remove
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -54,7 +52,6 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -86,7 +83,6 @@ import com.example.bulkyee.dimensions.FontDim
 import com.example.bulkyee.navigation.Routes
 import com.example.bulkyee.viewmodel.HomeViewModel
 import kotlinx.coroutines.launch
-import org.json.JSONObject
 import java.net.URLEncoder
 
 @OptIn(ExperimentalMaterial3Api::class)

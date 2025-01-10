@@ -19,8 +19,6 @@ import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.util.UUID
-import javax.inject.Inject
 
 class LoginViewModel : ViewModel() {
 
@@ -71,8 +69,10 @@ class LoginViewModel : ViewModel() {
 
                     user?.let {
                         // Fallback to GoogleSignInAccount for email and display name
-                        val email = account.email ?: it.email   // Get email from GoogleSignInAccount first, fallback to FirebaseUser
-                        val displayName = account.displayName ?: it.displayName  // Get name from GoogleSignInAccount first
+                        val email = account.email
+                            ?: it.email   // Get email from GoogleSignInAccount first, fallback to FirebaseUser
+                        val displayName = account.displayName
+                            ?: it.displayName  // Get name from GoogleSignInAccount first
 
                         // Ensure email is not null
                         if (email != null) {
@@ -163,46 +163,4 @@ class LoginViewModel : ViewModel() {
                 Log.e("Firestore", "Error updating user details: ${e.message}")
             }
     }
-
-    // Function to save the cart and order data
-
-//    fun saveCartToFirestore(userId: String, cart: List<Product>, status: String = "pending") {
-//        val db = FirebaseFirestore.getInstance()
-//
-//        // Create the list of products in the cart
-//        val cartItems = cart.map {
-//            mapOf(
-//                "productId" to it.id,
-//                "name" to it.name,
-//                "price" to it.price,
-//                "quantity" to it.quantity
-//            )
-//        }
-//
-//        // Generate a custom order ID using UUID
-//        val orderId = UUID.randomUUID().toString()
-//
-//        val orderMap = mapOf(
-//            "orderId" to orderId,
-//            "userId" to userId,
-//            "cartItems" to cartItems,
-//            "totalAmount" to cart.sumOf { it.price * it.quantity },  // Total amount of the cart
-//            "orderDate" to System.currentTimeMillis(),
-//            "status" to status,  // Adding the order status field (pending or success)
-//        )
-//
-//        // Save the order data to Firestore under the user's orders collection
-//        db.collection("users").document(userId)
-//            .collection("orders")  // Store orders as sub-collections
-//            .document(orderId)  // Save using the custom order ID
-//            .set(orderMap)
-//            .addOnSuccessListener {
-//                Log.d("Firestore", "Order saved successfully with Order ID: $orderId")
-//            }
-//            .addOnFailureListener { e ->
-//                Log.e("Firestore", "Error saving order: ${e.message}")
-//            }
-//    }
-
-
 }

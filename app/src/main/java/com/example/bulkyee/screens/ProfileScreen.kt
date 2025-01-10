@@ -1,6 +1,5 @@
 package com.example.bulkyee.screens
 
-import android.widget.Toast
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -32,43 +31,35 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bulkyee.dimensions.FamilyDim
 import com.example.bulkyee.dimensions.FontDim
 import com.example.bulkyee.navigation.Routes
-import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.tasks.await
+import com.example.bulkyee.viewmodel.ProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(modifier: Modifier = Modifier, navController: NavController) {
 
-    val firebaseUser = FirebaseAuth.getInstance().currentUser
-    val userId = firebaseUser!!.uid
-    val db = FirebaseFirestore.getInstance()
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     val context = LocalContext.current
+    val profileViewModel: ProfileViewModel = viewModel()
     var name by remember { mutableStateOf("") }
     var shopName by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
 
     // Fetch user details from Firestore
-    LaunchedEffect(userId) {
-        val document = db.collection("users").document(userId).get().await()
-        if (document.exists()) {
-            name = document.getString("name") ?: ""
-            shopName = document.getString("shopName") ?: ""
-            phoneNumber = document.getString("phoneNumber") ?: ""
-            address = document.getString("address") ?: ""
-        } else {
-            // Handle case where no user data exists
-            Toast.makeText(context, "No profile data found", Toast.LENGTH_SHORT).show()
-        }
+    LaunchedEffect(true) {
+        val userProfile = profileViewModel.fetchUserProfile()
+        name = userProfile["name"] ?: ""
+        shopName = userProfile["shopName"] ?: ""
+        phoneNumber = userProfile["phoneNumber"] ?: ""
+        address = userProfile["address"] ?: ""
     }
 
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     Scaffold(
         modifier = modifier

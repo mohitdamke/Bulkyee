@@ -25,8 +25,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bulkyee.data.PreferencesHelper
+import com.example.bulkyee.viewmodel.ProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -34,6 +36,8 @@ import kotlinx.coroutines.tasks.await
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun EditProfileScreen(modifier: Modifier = Modifier, navController: NavController) {
+
+    val profileViewModel: ProfileViewModel = viewModel()
     var name by remember { mutableStateOf("") }
     var shopName by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
@@ -44,43 +48,31 @@ fun EditProfileScreen(modifier: Modifier = Modifier, navController: NavControlle
     val userId = firebaseUser!!.uid
     val db = FirebaseFirestore.getInstance()
 
-    // Fetch existing data to prefill
-    LaunchedEffect(userId) {
-        val document = db.collection("users").document(userId).get().await()
-        if (document.exists()) {
-            name = document.getString("name") ?: ""
-            shopName = document.getString("shopName") ?: ""
-            phoneNumber = document.getString("phoneNumber") ?: ""
-            address = document.getString("address") ?: ""
-        }
+    // Fetch existing profile data
+    LaunchedEffect(true) {
+        val userProfile = profileViewModel.fetchUserProfile()
+        name = userProfile["name"] ?: ""
+        shopName = userProfile["shopName"] ?: ""
+        phoneNumber = userProfile["phoneNumber"] ?: ""
+        address = userProfile["address"] ?: ""
     }
 
     // Handle update button click
     fun updateProfile() {
-        val userMap = hashMapOf(
-            "name" to name,
-            "shopName" to shopName,
-            "phoneNumber" to phoneNumber,
-            "address" to address
-        )
-
-        db.collection("users").document(userId)
-            .set(userMap)
-            .addOnSuccessListener {
-                PreferencesHelper.saveUserInfo(
-                    context = context,
-                    name = name,
-                    shopName = shopName,
-                    phoneNumber = phoneNumber,
-                    address = address,
-                    email = firebaseUser.email ?: "No Email"
-                )
+        profileViewModel.updateProfile(
+            name = name,
+            shopName = shopName,
+            phoneNumber = phoneNumber,
+            address = address,
+            context = context,
+            onSuccess = {
                 Toast.makeText(context, "Profile updated successfully!", Toast.LENGTH_SHORT).show()
                 navController.popBackStack()  // Go back to Profile screen
+            },
+            onFailure = { error ->
+                Toast.makeText(context, "Error updating profile: $error", Toast.LENGTH_SHORT).show()
             }
-            .addOnFailureListener { e ->
-                Toast.makeText(context, "Error updating profile: ${e.message}", Toast.LENGTH_SHORT).show()
-            }
+        )
     }
 
     // Layout to edit profile information
@@ -100,15 +92,26 @@ fun EditProfileScreen(modifier: Modifier = Modifier, navController: NavControlle
                 Icon(Icons.Filled.Add, contentDescription = "Save Changes")
             }
         }
-    ) {paddingValue ->
-        Column(modifier = modifier.padding(paddingValue).padding(16.dp)) {
+    ) { paddingValue ->
+        Column(modifier = modifier
+            .padding(paddingValue)
+            .padding(16.dp)) {
             TextField(value = name, onValueChange = { name = it }, label = { Text("Name") })
             Spacer(modifier = Modifier.height(8.dp))
-            TextField(value = shopName, onValueChange = { shopName = it }, label = { Text("Shop Name") })
+            TextField(
+                value = shopName,
+                onValueChange = { shopName = it },
+                label = { Text("Shop Name") })
             Spacer(modifier = Modifier.height(8.dp))
-            TextField(value = phoneNumber, onValueChange = { phoneNumber = it }, label = { Text("Phone Number") })
+            TextField(
+                value = phoneNumber,
+                onValueChange = { phoneNumber = it },
+                label = { Text("Phone Number") })
             Spacer(modifier = Modifier.height(8.dp))
-            TextField(value = address, onValueChange = { address = it }, label = { Text("Address") })
+            TextField(
+                value = address,
+                onValueChange = { address = it },
+                label = { Text("Address") })
         }
     }
 }

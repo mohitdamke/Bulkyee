@@ -92,6 +92,9 @@ import java.net.URLEncoder
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
+
+    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+
     val context = LocalContext.current
     val homeViewModel: HomeViewModel = viewModel()
 
@@ -101,10 +104,8 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
     val isSuccess by homeViewModel.isSuccess.collectAsState(false)
     val isError by homeViewModel.isError.collectAsState(false)
     val items = homeViewModel.items.collectAsState().value
-//    var items by remember { mutableStateOf<List<Item>>(emptyList()) }
     val selectedItems = remember { mutableStateMapOf<String, Int>() }
 
-    val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     LaunchedEffect(key1 = homeViewModel) {
         scope.launch {
@@ -131,7 +132,7 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
             title = "My Orders",
             selectedIcon = Icons.Filled.ProductionQuantityLimits,
             unselectedIcon = Icons.Outlined.ProductionQuantityLimits,
-            route = Routes.AllOrdersScreen.routes,
+            route = Routes.MyOrderScreen.routes,
         ),
         NavigationItems(
             title = "Settings",

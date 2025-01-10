@@ -2,22 +2,22 @@ package com.example.bulkyee.viewmodel
 
 import android.content.Context
 import android.widget.Toast
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.google.android.gms.auth.api.signin.GoogleSignInClient
+import androidx.lifecycle.viewModelScope
+import com.example.bulkyee.data.PreferencesHelper
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class ProfileViewModel : ViewModel() {
 
-    private lateinit var googleSignInClient: GoogleSignInClient
-    private val auth: FirebaseAuth = FirebaseAuth.getInstance()
-    private val firestore = FirebaseFirestore.getInstance()
-    private val _isUserLoggedIn = MutableLiveData<Boolean>()
-
-
+    private val db = FirebaseFirestore.getInstance()
+    private val firebaseUser = FirebaseAuth.getInstance().currentUser
+    private val userId = firebaseUser!!.uid
 
     // Save user details to Firestore
+
     fun saveUserDetails(
         context: Context,
         name: String,
@@ -45,7 +45,8 @@ class ProfileViewModel : ViewModel() {
             }
             .addOnFailureListener { e ->
                 // Handle error
-                Toast.makeText(context, "Error saving details: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "Error saving details: ${e.message}", Toast.LENGTH_SHORT)
+                    .show()
             }
     }
 
@@ -53,13 +54,14 @@ class ProfileViewModel : ViewModel() {
     fun fetchUserDetails(
         context: Context,
         onSuccess: (
-        name: String,
-        shopName: String,
-        phoneNumber: String,
-        address: String,
-        email: String
+            name: String,
+            shopName: String,
+            phoneNumber: String,
+            address: String,
+            email: String
 
-    ) -> Unit) {
+        ) -> Unit
+    ) {
         val firebaseUser = FirebaseAuth.getInstance().currentUser
         val userId = firebaseUser!!.uid
         val db = FirebaseFirestore.getInstance()
@@ -82,7 +84,64 @@ class ProfileViewModel : ViewModel() {
             }
             .addOnFailureListener { e ->
                 // Handle failure
-                Toast.makeText(context, "Error fetching user details: ${e.message}", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    context,
+                    "Error fetching user details: ${e.message}",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
+    }
+
+
+    // Function to fetch profile data from Firestore
+    suspend fun fetchUserProfile(): Map<String, String> {
+        val userMap = mutableMapOf<String, String>()
+        try {
+            val document = db.collection("users").document(userId).get().await()
+            if (document.exists()) {
+                userMap["name"] = document.getString("name") ?: ""
+                userMap["shopName"] = document.getString("shopName") ?: ""
+                userMap["phoneNumber"] = document.getString("phoneNumber") ?: ""
+                userMap["address"] = document.getString("address") ?: ""
+            }
+        } catch (e: Exception) {
+            // Handle any exception
+        }
+        return userMap
+    }
+
+    // Function to update profile data
+    fun updateProfile(
+        name: String,
+        shopName: String,
+        phoneNumber: String,
+        address: String,
+        context: Context,
+        onSuccess: () -> Unit,
+        onFailure: (String) -> Unit
+    ) {
+        val userMap = hashMapOf(
+            "name" to name,
+            "shopName" to shopName,
+            "phoneNumber" to phoneNumber,
+            "address" to address
+        )
+
+        viewModelScope.launch {
+            try {
+                db.collection("users").document(userId).set(userMap).await()
+                PreferencesHelper.saveUserInfo(
+                    context = context,
+                    name = name,
+                    shopName = shopName,
+                    phoneNumber = phoneNumber,
+                    address = address,
+                    email = firebaseUser?.email ?: "No Email"
+                )
+                onSuccess()
+            } catch (e: Exception) {
+                onFailure(e.message ?: "Error updating profile")
+            }
+        }
     }
 }

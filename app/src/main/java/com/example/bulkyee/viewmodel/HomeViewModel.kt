@@ -11,6 +11,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 
 class HomeViewModel : ViewModel() {
+
     private val db = FirebaseFirestore.getInstance()
 
     private val _items = MutableStateFlow<List<Item>>(emptyList())

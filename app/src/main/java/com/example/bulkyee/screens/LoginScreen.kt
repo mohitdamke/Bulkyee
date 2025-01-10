@@ -43,6 +43,7 @@ import com.google.android.gms.common.api.ApiException
 
 @Composable
 fun LoginScreen(modifier: Modifier = Modifier, navController: NavController) {
+
     val loginViewModel: LoginViewModel = viewModel()
     val context = LocalContext.current
     val activity = LocalContext.current as Activity

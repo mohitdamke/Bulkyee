@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import com.example.bulkyee.data.Item
+import com.example.bulkyee.navigation.Routes
 
 @Composable
 fun CheckOutScreen(cartQueryParam: String?, navController: NavController) {
@@ -59,8 +60,19 @@ fun CheckOutScreen(cartQueryParam: String?, navController: NavController) {
         Text(text = "Total: ₹$totalPrice", fontSize = 20.sp, fontWeight = FontWeight.Bold)
         Button(
             onClick = {
-                // Confirm order logic
-                navController.navigate("order_confirmation")
+                // Encode the cart data
+                val encodedCartData = cartItems.joinToString(",") {
+                    "${it.itemId}:${it.quantity}:${it.itemName}:${it.discountedPrice}:${it.realPrice}"
+                }
+                // Create the route by replacing placeholders with actual values
+                val route = Routes.AddressAndPaymentScreen.routes
+
+                navController.navigate(
+                    route.replace(
+                        oldValue = "{cartQueryParam}",
+                        newValue = cartQueryParam!!
+                    )
+                )
             },
             modifier = Modifier.fillMaxWidth()
         ) {

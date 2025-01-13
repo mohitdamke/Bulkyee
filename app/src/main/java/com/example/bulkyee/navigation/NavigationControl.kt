@@ -6,7 +6,6 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.example.bulkyee.screens.AddressAndPaymentScreen
 import com.example.bulkyee.screens.CheckOutScreen
 import com.example.bulkyee.screens.EditProfileScreen
 import com.example.bulkyee.screens.HomeScreen
@@ -52,20 +51,13 @@ fun NavigationControl() {
             EditProfileScreen(navController = navController)
         }
         composable(
-            route = "checkout_screen?cart={cartQueryParam}",
+            route = Routes.CheckOutScreen.routes,
             arguments = listOf(navArgument("cartQueryParam") { type = NavType.StringType })
         ) { backStackEntry ->
             val cartQueryParam = backStackEntry.arguments?.getString("cartQueryParam")
             CheckOutScreen(navController = navController, cartQueryParam = cartQueryParam)
         }
 
-        composable(
-            route = Routes.AddressAndPaymentScreen.routes,
-            arguments = listOf(navArgument("cartQueryParam") { type = NavType.StringType })
-        ) {
-            val cartQueryParam = it.arguments?.getString("cartQueryParam") ?: ""
-            AddressAndPaymentScreen(navController = navController, cartQueryParam = cartQueryParam)
-        }
 
 
     }

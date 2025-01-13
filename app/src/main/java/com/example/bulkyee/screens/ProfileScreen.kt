@@ -1,7 +1,9 @@
 package com.example.bulkyee.screens
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -9,6 +11,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -27,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -36,6 +40,8 @@ import androidx.navigation.NavController
 import com.example.bulkyee.dimensions.FamilyDim
 import com.example.bulkyee.dimensions.FontDim
 import com.example.bulkyee.navigation.Routes
+import com.example.bulkyee.ui.theme.Brown40
+import com.example.bulkyee.ui.theme.White10
 import com.example.bulkyee.viewmodel.ProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,12 +70,12 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavController) {
     Scaffold(
         modifier = modifier
             .fillMaxSize()
+            .background(White10)
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Black,
-                    titleContentColor = Color.White,
+                    containerColor = White10,
                     actionIconContentColor = Color.White,
                     navigationIconContentColor = Color.White,
                     scrolledContainerColor = Color.Black,
@@ -79,6 +85,7 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavController) {
                         text = "Profile",
                         maxLines = 1,
                         letterSpacing = 1.sp,
+                        color = Brown40,
                         textAlign = TextAlign.Center,
                         fontSize = FontDim.extraLargeTextSize,
                         overflow = TextOverflow.Visible,
@@ -93,7 +100,7 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavController) {
                         modifier = Modifier
                             .size(30.dp)
                             .clickable { navController.navigate(Routes.EditProfileScreen.routes) },
-                        tint = Color.White
+                        tint = Brown40
                     )
                 },
                 navigationIcon = {
@@ -103,7 +110,7 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavController) {
                         modifier = Modifier
                             .size(30.dp)
                             .clickable { navController.navigate(Routes.HomeScreen.routes) },
-                        tint = Color.White
+                        tint = Brown40
                     )
                     Spacer(
                         modifier = Modifier.padding(start = 10.dp)
@@ -113,33 +120,35 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavController) {
             )
         },
     ) { paddingValues ->
-
         Column(
             modifier = modifier
                 .fillMaxSize()
+                .background(White10)
                 .padding(paddingValues)
-                .padding(10.dp)
+                .padding(16.dp)
         ) {
-            Text(
-                text = "Name: $name",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Text(
-                text = "Shop Name: $shopName",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Text(
-                text = "Phone Number: $phoneNumber",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 8.dp)
-            )
-            Text(
-                text = "Address: $address",
-                style = MaterialTheme.typography.bodyLarge,
-                modifier = Modifier.padding(bottom = 16.dp)
-            )
+            ProfileDetail("Name", name)
+            ProfileDetail("Shop Name", shopName)
+            ProfileDetail("Phone Number", phoneNumber)
+            ProfileDetail("Address", address)
         }
+    }
+}
+
+
+@Composable
+fun ProfileDetail(label: String, value: String) {
+    Row(modifier = Modifier.padding(vertical = 8.dp)) {
+        Text(
+            text = "$label: ",
+            fontSize = FontDim.mediumTextSize,
+            fontFamily = FamilyDim.Normal,
+            color = Brown40,
+        )
+        Text(
+            text = value, fontSize = FontDim.mediumTextSize,
+            fontFamily = FamilyDim.Normal,
+            color = Color.Black
+        )
     }
 }

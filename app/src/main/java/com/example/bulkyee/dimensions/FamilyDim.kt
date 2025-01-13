@@ -5,8 +5,8 @@ import com.example.bulkyee.R
 
 object FamilyDim {
 
-    val Normal = FontFamily(Font(R.font.hanken_regular))
-    val Medium = FontFamily(Font(R.font.hanken_medium))
-    val Bold = FontFamily(Font(R.font.hanken_bold))
-    val SemiBold = FontFamily(Font(R.font.hanken_semibold))
+    val Normal = FontFamily(Font(R.font.poppins_regular))
+    val Medium = FontFamily(Font(R.font.poppins_medium))
+    val Bold = FontFamily(Font(R.font.poppins_bold))
+    val SemiBold = FontFamily(Font(R.font.poppins_semibold))
 }

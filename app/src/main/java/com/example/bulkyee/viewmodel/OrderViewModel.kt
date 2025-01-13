@@ -12,7 +12,6 @@ import com.example.bulkyee.data.PreferencesHelper
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.auth
-import com.google.firebase.auth.ktx.auth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -43,77 +42,90 @@ class OrderViewModel : ViewModel() {
             fetchOrders(userId = currentUserId)
         }
     }
+
     // Function to handle order placement
     fun placeOrder(
         context: Context,
         cartQueryParam: String?,
+        totalPrice : Int?,
         navController: NavController
     ) {
-        val sharedPreferences = context.getSharedPreferences("UserPrefs", Context.MODE_PRIVATE)
-        val userInfo = PreferencesHelper.getUserInfo(context)
-        val userId = FirebaseAuth.getInstance().currentUser?.uid ?: "" // Get current user's UID
-        val userName = userInfo["name"] ?: "No Name Found"
-        val userEmail = userInfo["email"] ?: "No Email Found"
-        val phoneNumber = userInfo["phoneNumber"] ?: "No Phone Number Found"
-        val shopName = userInfo["shopName"] ?: "No Shop Name Found"
-        val userAddress = userInfo["address"] ?: "No Address Found"
+        viewModelScope.launch(Dispatchers.IO) {
+            _isLoading.value = true
 
-        // Parse cart items
-        val cartItems = cartQueryParam?.split(",")?.mapNotNull { cartEntry ->
-            try {
-                val parts = cartEntry.split(":")
-                Item(
-                    itemId = parts[0],
-                    quantity = parts[1].toInt(),
-                    itemName = parts[2],
-                    discountedPrice = parts[3].toInt(),
-                    realPrice = parts[4].toInt(),
-                    imageUrl = "" // Add if available
-                )
-            } catch (e: Exception) {
-                Log.e("OrderViewModel", "Error parsing cart item: $cartEntry", e)
-                null
-            }
-        } ?: emptyList()
+            val userInfo = PreferencesHelper.getUserInfo(context)
+            val userId = FirebaseAuth.getInstance().currentUser?.uid ?: "" // Get current user's UID
+            val userName = userInfo["name"] ?: "No Name Found"
+            val userEmail = userInfo["email"] ?: "No Email Found"
+            val phoneNumber = userInfo["phoneNumber"] ?: "No Phone Number Found"
+            val shopName = userInfo["shopName"] ?: "No Shop Name Found"
+            val userAddress = userInfo["address"] ?: "No Address Found"
 
-        // Prepare the order data
-        if (userId.isNotEmpty()) {
-            val orderId = System.currentTimeMillis().toString() // Generate unique order ID
-            val orderData = hashMapOf(
-                "orderId" to orderId,
-                "userId" to userId,
-                "userName" to userName,
-                "userEmail" to userEmail,
-                "phoneNumber" to phoneNumber,
-                "shopName" to shopName,
-                "userAddress" to userAddress,
-                "items" to cartItems.map {
-                    mapOf(
-                        "itemId" to it.itemId,
-                        "itemName" to it.itemName,
-                        "quantity" to it.quantity,
-                        "discountedPrice" to it.discountedPrice,
-                        "realPrice" to it.realPrice
+            // Parse cart items
+            val cartItems = cartQueryParam?.split(",")?.mapNotNull { cartEntry ->
+                try {
+                    val parts = cartEntry.split(":")
+                    Item(
+                        itemId = parts[0],
+                        quantity = parts[1].toInt(),
+                        itemName = parts[2],
+                        discountedPrice = parts[3].toInt(),
+                        realPrice = parts[4].toInt(),
+                        imageUrl = "" // Add if available
                     )
-                },
-                "status" to "Pending" // Initial status of the order
-            )
+                } catch (e: Exception) {
+                    Log.e("OrderViewModel", "Error parsing cart item: $cartEntry", e)
+                    null
+                }
+            } ?: emptyList()
 
-            // Save order to Firestore
-            val db = FirebaseFirestore.getInstance()
-            db.collection("orders").document(userId)
-                .set(orderData)
-                .addOnSuccessListener {
-                    Toast.makeText(
-                        context,
-                        "Order placed successfully!",
-                        Toast.LENGTH_SHORT
-                    ).show()
-                    navController.navigate("order_confirmation")
-                }
-                .addOnFailureListener {
-                    Toast.makeText(context, "Failed to place order.", Toast.LENGTH_SHORT).show()
-                }
+            if (currentUserId == null) {
+                _isLoading.value = false
+                _isError.value = true
+                Toast.makeText(context, "User not logged in.", Toast.LENGTH_SHORT).show()
+                return@launch
+            }
+
+            // Prepare the order data
+            if (userId.isNotEmpty()) {
+                val orderId = System.currentTimeMillis().toString() // Generate unique order ID
+                val orderData = hashMapOf(
+                    "orderId" to orderId,
+                    "userId" to userId,
+                    "userName" to userName,
+                    "userEmail" to userEmail,
+                    "phoneNumber" to phoneNumber,
+                    "shopName" to shopName,
+                    "userAddress" to userAddress,
+                    "items" to cartItems.map {
+                        mapOf(
+                            "itemId" to it.itemId,
+                            "itemName" to it.itemName,
+                            "quantity" to it.quantity,
+                            "discountedPrice" to it.discountedPrice,
+                            "realPrice" to it.realPrice
+                        )
+                    },
+                    "totalPrice" to totalPrice, // Add totalPrice here
+                    "status" to "Pending" // Initial status of the order
+                )
+
+                // Save order to Firestore
+                db.collection("users").document(userId).collection("orders").document(orderId)
+                    .set(orderData)
+                    .addOnSuccessListener {
+                        _isSuccess.value = true
+                        _isLoading.value = false
+                        Log.d("OrderViewModel", "Order placed successfully")
+                    }
+                    .addOnFailureListener { e ->
+                        _isSuccess.value = false
+                        _isLoading.value = false
+                        Log.e("OrderViewModel", "Error placing order: ${e.message}")
+                        Toast.makeText(context, "Failed to place order.", Toast.LENGTH_SHORT).show()
+                    }
+
+            }
         }
     }
 

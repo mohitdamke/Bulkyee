@@ -1,6 +1,7 @@
 package com.example.bulkyee.screens
 
 import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -12,10 +13,12 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Done
+import androidx.compose.material.icons.filled.DoneAll
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Numbers
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Shop
+import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -23,7 +26,6 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextFieldDefaults
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -50,6 +52,8 @@ import com.example.bulkyee.data.PreferencesHelper
 import com.example.bulkyee.dimensions.FamilyDim
 import com.example.bulkyee.dimensions.FontDim
 import com.example.bulkyee.navigation.Routes
+import com.example.bulkyee.ui.theme.Brown40
+import com.example.bulkyee.ui.theme.White10
 import com.example.bulkyee.viewmodel.LoginViewModel
 import com.example.bulkyee.viewmodel.ProfileViewModel
 import com.google.firebase.auth.FirebaseAuth
@@ -62,53 +66,62 @@ fun InformationScreen(modifier: Modifier = Modifier, navController: NavControlle
     val loginViewModel: LoginViewModel = viewModel()
     val profileViewModel: ProfileViewModel = viewModel()
     val firebase = FirebaseAuth.getInstance()
-    val currentUserId = firebase.currentUser!!.uid
+    val currentUserId = firebase.currentUser?.uid
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+
     var name by remember { mutableStateOf("") }
     var shopName by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
-    val currentEmail = firebase.currentUser!!.email
-
+    val currentEmail = firebase.currentUser?.email
+    if (currentUserId == null || currentEmail == null) {
+        // Handle error if the user is not logged in
+        Toast.makeText(LocalContext.current, "User not logged in!", Toast.LENGTH_SHORT).show()
+        return
+    }
     // Check if user setup is already completed
     LaunchedEffect(Unit) {
         if (PreferencesHelper.isUserSetupCompleted(context)) {
             navController.navigate(Routes.HomeScreen.routes) {
-                popUpTo(0) // Clear backstack
+                popUpTo(0)
+                launchSingleTop = true
             }
+        } else {
+            Toast.makeText(context, "User setup not completed.", Toast.LENGTH_SHORT).show()
         }
     }
+
 
     // Fetch user details from Firestore if available
     LaunchedEffect(currentUserId) {
         profileViewModel.fetchUserDetails(
             context = context
         ) { fetchedName, fetchedShopName, fetchedPhoneNumber, fetchedAddress, fetchedEmail ->
-            name = fetchedName
-            shopName = fetchedShopName
-            phoneNumber = fetchedPhoneNumber
-            address = fetchedAddress
+            // Only update the fields if they are empty
+            if (name.isBlank()) name = fetchedName
+            if (shopName.isBlank()) shopName = fetchedShopName
+            if (phoneNumber.isBlank()) phoneNumber = fetchedPhoneNumber
+            if (address.isBlank()) address = fetchedAddress
         }
     }
-
     Scaffold(
         modifier = modifier
             .fillMaxSize()
             .nestedScroll(scrollBehavior.nestedScrollConnection),
         topBar = {
-            TopAppBar(
+            CenterAlignedTopAppBar(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = Color.Black,
-                    titleContentColor = Color.White,
+                    containerColor = White10,
                     actionIconContentColor = Color.White,
                     navigationIconContentColor = Color.White,
-                    scrolledContainerColor = Color.Black,
+                    scrolledContainerColor = Color.Transparent,
                 ),
                 title = {
                     Text(
                         text = "Enter your credentials",
                         maxLines = 1,
                         letterSpacing = 1.sp,
+                        color = Brown40,
                         textAlign = TextAlign.Center,
                         fontSize = FontDim.extraLargeTextSize,
                         overflow = TextOverflow.Visible,
@@ -147,16 +160,26 @@ fun InformationScreen(modifier: Modifier = Modifier, navController: NavControlle
                             shopName = shopName,
                             phoneNumber = phoneNumber,
                             address = address,
-                            email = firebase.currentUser?.email ?: "No Email"
+                            email = firebase.currentUser?.email ?: "No Email",
+                            keyUser = true
                         )
-                        navController.navigate(Routes.HomeScreen.routes)
+                        navController.navigate(Routes.HomeScreen.routes) {
+                            popUpTo(0) // Clear backstack
+                            launchSingleTop = true
+                        }
                         Toast.makeText(context, "Details saved successfully!", Toast.LENGTH_SHORT)
                             .show()
                     }
                 },
-                containerColor = Color.White,
-                icon = { Icon(Icons.Filled.Done, "Done.") },
-                text = { Text(text = "Information added") },
+                containerColor = Brown40,
+                contentColor = Color.White,
+                icon = { Icon(Icons.Filled.DoneAll, "Done.") },
+                text = {
+                    Text(
+                        text = "Information added", fontSize = FontDim.mediumTextSize,
+                        fontFamily = FamilyDim.Normal
+                    )
+                },
             )
         }
     ) { paddingValues ->
@@ -164,8 +187,10 @@ fun InformationScreen(modifier: Modifier = Modifier, navController: NavControlle
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(White10)
                 .padding(paddingValues)
-                .padding(10.dp), verticalArrangement = Arrangement.Top,
+                .padding(10.dp),
+            verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 

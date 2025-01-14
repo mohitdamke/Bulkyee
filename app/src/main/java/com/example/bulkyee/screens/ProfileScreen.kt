@@ -1,23 +1,25 @@
 package com.example.bulkyee.screens
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
 import androidx.compose.material.icons.rounded.Edit
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
@@ -25,24 +27,29 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.bulkyee.data.PreferencesHelper
 import com.example.bulkyee.dimensions.FamilyDim
 import com.example.bulkyee.dimensions.FontDim
 import com.example.bulkyee.navigation.Routes
 import com.example.bulkyee.ui.theme.Brown40
 import com.example.bulkyee.ui.theme.White10
+import com.example.bulkyee.viewmodel.LoginViewModel
 import com.example.bulkyee.viewmodel.ProfileViewModel
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -51,21 +58,32 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavController) {
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val currentUserId = Firebase.auth.currentUser?.uid
     val profileViewModel: ProfileViewModel = viewModel()
+    val loginViewModel: LoginViewModel = viewModel()
     var name by remember { mutableStateOf("") }
     var shopName by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
 
-    // Fetch user details from Firestore
     LaunchedEffect(true) {
         val userProfile = profileViewModel.fetchUserProfile()
+        Log.d("ProfileScreen", "Fetched user profile: $userProfile")
         name = userProfile["name"] ?: ""
         shopName = userProfile["shopName"] ?: ""
         phoneNumber = userProfile["phoneNumber"] ?: ""
         address = userProfile["address"] ?: ""
     }
 
+
+    LaunchedEffect(key1 = currentUserId) {
+        if (currentUserId == null) {
+            navController.navigate(Routes.LoginScreen.routes) {
+                popUpTo(0) // Clear backstack
+            }
+        }
+    }
 
     Scaffold(
         modifier = modifier
@@ -131,6 +149,36 @@ fun ProfileScreen(modifier: Modifier = Modifier, navController: NavController) {
             ProfileDetail("Shop Name", shopName)
             ProfileDetail("Phone Number", phoneNumber)
             ProfileDetail("Address", address)
+
+            // In your ProfileScreen or wherever logout is triggered
+            Button(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(10.dp),
+                colors = ButtonDefaults.buttonColors(Brown40),
+                onClick = {
+                    scope.launch {
+                        try {
+                            // Clear setup status
+                            PreferencesHelper.logoutInfo(context)
+
+                            // Sign out from Firebase
+                            loginViewModel.signOut()
+
+                            // Navigate to Login screen and clear backstack
+                            navController.navigate(Routes.LoginScreen.routes) {
+                                popUpTo(0) // Clear backstack
+                                launchSingleTop = true
+                            }
+                        } catch (e: Exception) {
+                            Log.e("ProfileScreen", "Logout failed", e)
+                        }
+                    }
+                }
+            ) {
+                Text(text = "Logout")
+            }
+
         }
     }
 }

@@ -1,6 +1,8 @@
 package com.example.bulkyee.screens
 
 import android.app.Activity
+import android.widget.Toast
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
@@ -18,7 +20,10 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.bulkyee.data.PreferencesHelper
 import com.example.bulkyee.navigation.Routes
+import com.example.bulkyee.ui.theme.White10
 import com.example.bulkyee.viewmodel.LoginViewModel
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.delay
 
 @Composable
@@ -29,34 +34,34 @@ fun SplashScreen(
 
     val loginViewModel: LoginViewModel = viewModel()
     val context = LocalContext.current
-    val isLoading by loginViewModel.isLoading.observeAsState(false)
     val isLoggedIn by loginViewModel.isUserLoggedIn.observeAsState(initial = false)
-    LaunchedEffect(Unit) {
-        if (isLoggedIn) {
+    val firebaseUser = Firebase.auth.currentUser?.uid
+
+
+    // Check if user setup is already completed
+    LaunchedEffect(isLoggedIn) {
+        // Delay for splash screen effect
+
+        if (firebaseUser != null) {
+            // User is logged in, navigate to Information Screen
             navController.navigate(Routes.InformationScreen.routes) {
                 popUpTo(0) // Clear backstack
             }
-        }
-    }
-
-    // Check if user setup is already completed
-    LaunchedEffect(Unit) {
-        if (PreferencesHelper.isUserSetupCompleted(context)) {
+        } else if (PreferencesHelper.isUserSetupCompleted(context)) {
             navController.navigate(Routes.HomeScreen.routes) {
                 popUpTo(0) // Clear backstack
             }
-        }
-    }
-    LaunchedEffect(key1 = Unit) {
-        delay(1000L)
-        navController.navigate(Routes.LoginScreen.routes) {
-            popUpToId
+        } else {
+            navController.navigate(Routes.LoginScreen.routes) {
+                popUpTo(0) // Clear backstack
+            }
         }
     }
 
     Column(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxSize()
+            .background(White10)
             .padding(10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center

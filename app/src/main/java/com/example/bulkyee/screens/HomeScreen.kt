@@ -18,12 +18,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ProductionQuantityLimits
 import androidx.compose.material.icons.filled.Remove
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.outlined.Home
@@ -47,8 +50,10 @@ import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
 import androidx.compose.material3.NavigationDrawerItemDefaults
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberDrawerState
 import androidx.compose.material3.rememberTopAppBarState
@@ -56,8 +61,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateMapOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -70,11 +77,14 @@ import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.graphics.Color.Companion.White
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -91,6 +101,9 @@ import com.example.bulkyee.navigation.Routes
 import com.example.bulkyee.ui.theme.Brown40
 import com.example.bulkyee.ui.theme.White10
 import com.example.bulkyee.viewmodel.HomeViewModel
+import com.example.bulkyee.viewmodel.LoginViewModel
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
 
@@ -102,14 +115,33 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
 
     val context = LocalContext.current
     val homeViewModel: HomeViewModel = viewModel()
+    val loginViewModel: LoginViewModel = viewModel()
+    val isLoggedIn by loginViewModel.isUserLoggedIn.observeAsState(initial = false)
 
     // Pull-to-refresh state
     val isLoading by homeViewModel.isLoading.collectAsState(false)
     val scope = rememberCoroutineScope()
+
+    // Search query state
+    var searchQuery by remember { mutableStateOf("") }
+
     val isSuccess by homeViewModel.isSuccess.collectAsState(false)
     val isError by homeViewModel.isError.collectAsState(false)
     val items = homeViewModel.items.collectAsState().value
     val selectedItems = remember { mutableStateMapOf<String, Int>() }
+
+    // Filtered items based on search query
+    val filteredItems = items.filter { it.itemName.contains(searchQuery, ignoreCase = true) }
+
+    LaunchedEffect(isLoggedIn) {
+        val firebaseUser = Firebase.auth.currentUser
+        if (firebaseUser == null) {
+            // Navigate to the SplashScreen if user is null or empty
+            navController.navigate(Routes.SplashScreen.routes) {
+                popUpTo(0) // Clear backstack
+            }
+        }
+    }
 
 
     LaunchedEffect(key1 = homeViewModel) {
@@ -193,8 +225,6 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
             }
         }, gesturesEnabled = true
     ) {
-
-
         Scaffold(modifier = modifier
             .fillMaxSize()
             .background(White10)
@@ -221,14 +251,8 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                     },
                     scrollBehavior = scrollBehavior,
                     actions = {
-                        Icon(
-                            Icons.Rounded.Search,
-                            contentDescription = "",
-                            modifier = Modifier
-                                .size(30.dp)
-                                .clickable { navController.navigate(Routes.SearchScreen.routes) },
-                            tint = Brown40
-                        )
+                        // Search Bar UI
+
                         Spacer(modifier = Modifier.padding(10.dp))
                         Icon(
                             Icons.Rounded.Menu,
@@ -274,20 +298,33 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
             }
 
         ) { paddingValues ->
-            Box(
+            Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(White10)
+                    .padding(paddingValues)
+                    .padding(10.dp)
             ) {
+                SearchOutlineText(
+                    value = searchQuery,
+                    onValueChange = { searchQuery = it },
+                    label = "Search items",
+                    icons = Icons.Default.Search,
+                    keyboardOptions = KeyboardOptions(
+                        keyboardType = KeyboardType.Text, imeAction = ImeAction.Search
+                    )
+                )
+                Spacer(modifier = modifier.padding(10.dp))
                 if (isLoading) {
                     // Show loading indicator
+                    Box(modifier = modifier.fillMaxSize()){
                     CircularProgressIndicator(
                         modifier = Modifier
-                            .background(White10)
                             .align(Alignment.Center)
                             .size(50.dp)
                     ) // Adjust the size to prevent it from taking full size)
-                }
+                }}
+
                 if (isError && items.isEmpty()) {
                     Column(
                         modifier = Modifier
@@ -306,41 +343,41 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                         )
                     }
                 }
-            }
 
-            // Show loading or no items message based on the state of the items list
-            if (isSuccess && items.isEmpty()) {
 
-                // Show "No items available" message
-                // Show a message indicating no items are available
-                Column(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(White10),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
+                // Show loading or no items message based on the state of the items list
+                if (isSuccess && items.isEmpty()) {
 
-                    Text(
-                        text = "No items available.",
-                        fontSize = FontDim.mediumTextSize,
-                        fontFamily = FamilyDim.Bold,
-                        color = Black
-                    )
-                }
-            } else if (isSuccess) {
-                LazyColumn(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(White10)
-                        .padding(paddingValues)
-                ) {
-                    items(items) { item ->
-                        ItemCard(item = item,
-                            quantity = selectedItems[item.itemId] ?: 0,
-                            onQuantityChange = { newQuantity ->
-                                selectedItems[item.itemId] = newQuantity
-                            })
+                    // Show "No items available" message
+                    // Show a message indicating no items are available
+                    Column(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(White10),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+
+                        Text(
+                            text = "No items available.",
+                            fontSize = FontDim.mediumTextSize,
+                            fontFamily = FamilyDim.Bold,
+                            color = Black
+                        )
+                    }
+                } else if (isSuccess) {
+                    LazyColumn(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(White10)
+                    ) {
+                        items(filteredItems) { item ->
+                            ItemCard(item = item,
+                                quantity = selectedItems[item.itemId] ?: 0,
+                                onQuantityChange = { newQuantity ->
+                                    selectedItems[item.itemId] = newQuantity
+                                })
+                        }
                     }
                 }
             }
@@ -455,4 +492,52 @@ fun ItemCard(
             }
         }
     }
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun SearchOutlineText(
+    modifier: Modifier = Modifier,
+    value: String,
+    icons: ImageVector,
+    onValueChange: (String) -> Unit,
+    label: String,
+    keyboardOptions: KeyboardOptions
+) {
+    OutlinedTextField(
+        value = value,
+        onValueChange = { onValueChange(it) },
+        singleLine = true,
+        leadingIcon = {
+            Icon(
+                imageVector = icons,
+                contentDescription = "",
+                modifier = Modifier.padding(10.dp),
+                tint = Brown40
+            )
+        },
+        placeholder = {
+            Text(
+                text = "Enter your $label",
+                fontSize = FontDim.mediumTextSize,
+                fontFamily = FamilyDim.SemiBold,
+                color = Color.Gray,
+                maxLines = 1,
+                overflow = TextOverflow.Visible
+            )
+        },
+        colors = TextFieldDefaults.outlinedTextFieldColors(
+            unfocusedPlaceholderColor = Color.Gray,
+            focusedPlaceholderColor = Color.Gray,
+            focusedBorderColor = Brown40,
+            unfocusedBorderColor = Brown40,
+            focusedTextColor = Black,
+            unfocusedTextColor = Black
+        ),
+        keyboardOptions = keyboardOptions,
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(100.dp),
+        minLines = 1
+    )
 }

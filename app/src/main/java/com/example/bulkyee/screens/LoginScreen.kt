@@ -40,32 +40,40 @@ import com.example.bulkyee.navigation.Routes
 import com.example.bulkyee.viewmodel.LoginViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
+import com.google.firebase.Firebase
+import com.google.firebase.auth.auth
 
 @Composable
 fun LoginScreen(modifier: Modifier = Modifier, navController: NavController) {
 
     val loginViewModel: LoginViewModel = viewModel()
+    val currentUserId = Firebase.auth.currentUser?.uid
+
     val context = LocalContext.current
     val activity = LocalContext.current as Activity
     val isLoading by loginViewModel.isLoading.observeAsState(false)
     val isLoggedIn by loginViewModel.isUserLoggedIn.observeAsState(initial = false)
-    // Check if the user is already logged in
-    LaunchedEffect(Unit) {
-        if (isLoggedIn) {
+
+
+    LaunchedEffect(isLoggedIn) {
+        // Check if the user is logged in via Firebase
+        val firebaseUser = Firebase.auth.currentUser
+
+        if (firebaseUser != null) {
+            // User is logged in, navigate to Information Screen
             navController.navigate(Routes.InformationScreen.routes) {
                 popUpTo(0) // Clear backstack
+            }
+        } else {
+            // If user is not logged in, check setup completion and navigate accordingly
+            if (PreferencesHelper.isUserSetupCompleted(context)) {
+                navController.navigate(Routes.HomeScreen.routes) {
+                    popUpTo(0) // Clear backstack
+                }
             }
         }
     }
 
-    // Check if user setup is already completed
-    LaunchedEffect(Unit) {
-        if (PreferencesHelper.isUserSetupCompleted(context)) {
-            navController.navigate(Routes.HomeScreen.routes) {
-                popUpTo(0) // Clear backstack
-            }
-        }
-    }
 
     // Result launcher to handle Google Sign-In
     val launcher = rememberLauncherForActivityResult(
@@ -80,15 +88,16 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController) {
                         popUpTo(0) // Clear backstack
                     }
                 } else {
-                    // Handle login failure
                     loginViewModel.showErrorMessage(
-                        activity, "Authentication failed. Please try again."
+                        activity,
+                        "Authentication failed. Please try again."
                     )
                 }
             }
         } catch (e: ApiException) {
             loginViewModel.showErrorMessage(
-                activity, "Google Sign-In failed: ${e.localizedMessage}"
+                activity,
+                "Google Sign-In failed: ${e.localizedMessage}"
             )
         }
     }

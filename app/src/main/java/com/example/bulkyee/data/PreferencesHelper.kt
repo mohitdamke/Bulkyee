@@ -2,6 +2,8 @@ package com.example.bulkyee.data
 
 import android.content.Context
 import android.content.SharedPreferences
+import android.util.Log
+import com.google.firebase.auth.FirebaseAuth
 
 object PreferencesHelper {
     private const val PREF_NAME = "user_preferences"
@@ -24,7 +26,8 @@ object PreferencesHelper {
         shopName: String,
         phoneNumber: String,
         address: String,
-        email: String
+        email: String,
+        keyUser: Boolean,
     ) {
         val editor = getPreferences(context).edit()
         editor.putString(KEY_NAME, name)
@@ -32,9 +35,34 @@ object PreferencesHelper {
         editor.putString(KEY_PHONE_NUMBER, phoneNumber)
         editor.putString(KEY_ADDRESS, address)
         editor.putString(KEY_EMAIL, email)
-        editor.putBoolean(KEY_USER_SETUP_COMPLETED, true)  // Flag to indicate user setup is complete
+        editor.putBoolean(KEY_USER_SETUP_COMPLETED, keyUser)  // Flag to indicate user setup is complete
         editor.apply() // Commit changes
     }
+
+    fun logoutInfo(context: Context) {
+        val preferences = getPreferences(context)
+        val editor = preferences.edit()
+
+        // Reset all user-related preferences
+        editor.putString(KEY_NAME, "")
+        editor.putString(KEY_SHOP_NAME, "")
+        editor.putString(KEY_PHONE_NUMBER, "")
+        editor.putString(KEY_ADDRESS, "")
+        editor.putString(KEY_EMAIL, "")
+        editor.putBoolean(KEY_USER_SETUP_COMPLETED, false)  // Flag to indicate user setup is complete
+
+        // Commit changes to SharedPreferences
+        editor.apply()
+
+        // Optionally, clear any other stored data if necessary (like auth tokens)
+
+        // Sign out from Firebase
+        FirebaseAuth.getInstance().signOut()
+
+        // Log out completed
+        Log.d("PreferencesHelper", "User logged out and data reset successfully.")
+    }
+
 
     // Retrieve user information from SharedPreferences
     fun getUserInfo(context: Context): Map<String, String> {
@@ -55,16 +83,23 @@ object PreferencesHelper {
 
     // Check if the user has completed the setup
     fun isUserSetupCompleted(context: Context): Boolean {
-        return getPreferences(context).getBoolean(KEY_USER_SETUP_COMPLETED, false)
+        return try {
+            getPreferences(context).getBoolean(KEY_USER_SETUP_COMPLETED, false)
+        } catch (e: Exception) {
+            Log.e("PreferencesHelper", "Error fetching setup completion", e)
+            false
+        }
+    }
+
+    // Clear user setup status
+    fun clearUserSetupStatus(context: Context) {
+        try {
+            getPreferences(context)
+                .edit()
+                .putBoolean(KEY_USER_SETUP_COMPLETED, false)  // Set to false on logout
+                .apply()
+        } catch (e: Exception) {
+            Log.e("PreferencesHelper", "Error clearing setup status", e)
+        }
     }
 }
-
-
-//  To retrieve the information
-
-//val userInfo = PreferencesHelper.getUserInfo(context)
-//val name = userInfo["name"]
-//val shopName = userInfo["shopName"]
-//val phoneNumber = userInfo["phoneNumber"]
-//val address = userInfo["address"]
-//val email = userInfo["email"]

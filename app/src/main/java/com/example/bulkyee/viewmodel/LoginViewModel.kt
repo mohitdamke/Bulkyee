@@ -17,8 +17,10 @@ import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class LoginViewModel : ViewModel() {
 
@@ -62,7 +64,7 @@ class LoginViewModel : ViewModel() {
             val credential: AuthCredential = GoogleAuthProvider.getCredential(account.idToken, null)
             _isLoading.postValue(true)
 
-            viewModelScope.launch {
+            viewModelScope.launch(Dispatchers.IO) {
                 try {
                     val authResult = auth.signInWithCredential(credential).await()
                     val user = authResult.user
@@ -76,28 +78,57 @@ class LoginViewModel : ViewModel() {
 
                         // Ensure email is not null
                         if (email != null) {
-                            // Store user info in Firestore
-                            val userData = hashMapOf(
-                                "email" to email,
-                                "name" to displayName.orEmpty(),
-                                "phone" to "",
-                                "address" to "",
-                                "shopName" to "",
-                                "uid" to it.uid,
-                                "createdAt" to System.currentTimeMillis()
-                            )
+                            // Check if user already exists in Firestore
+                            val userRef = firestore.collection("users").document(it.uid)
+                            val documentSnapshot = userRef.get().await()
 
-                            // Save the user data to Firestore
-                            firestore.collection("users").document(it.uid)
-                                .set(userData)
-                                .addOnSuccessListener {
-                                    Log.d("Firestore", "User data stored successfully")
+                            if (!documentSnapshot.exists()) {
+                                // If the user doesn't exist in Firestore, store new user data
+                                val userData = hashMapOf(
+                                    "email" to email,
+                                    "name" to displayName.orEmpty(),
+                                    "phone" to "",
+                                    "address" to "",
+                                    "shopName" to "",
+                                    "uid" to it.uid,
+                                    "createdAt" to System.currentTimeMillis()
+                                )
+
+                                // Save the user data to Firestore
+                                userRef.set(userData)
+                                    .addOnSuccessListener {
+                                        Log.d("Firestore", "User data stored successfully")
+                                        onResult(true)
+                                    }
+                                    .addOnFailureListener { e ->
+                                        Log.e("Firestore", "Error storing user data: ${e.message}")
+                                        onResult(false)
+                                    }
+                            } else {
+                                // If user already exists, update any missing fields if necessary
+                                val userData = mutableMapOf<String, Any>()
+                                if (documentSnapshot.getString("name").isNullOrEmpty()) {
+                                    userData["name"] = displayName.orEmpty()
+                                }
+                                if (documentSnapshot.getString("email").isNullOrEmpty()) {
+                                    userData["email"] = email
+                                }
+
+                                // Update user data in Firestore
+                                if (userData.isNotEmpty()) {
+                                    userRef.update(userData)
+                                        .addOnSuccessListener {
+                                            Log.d("Firestore", "User data updated successfully")
+                                            onResult(true)
+                                        }
+                                        .addOnFailureListener { e ->
+                                            Log.e("Firestore", "Error updating user data: ${e.message}")
+                                            onResult(false)
+                                        }
+                                } else {
                                     onResult(true)
                                 }
-                                .addOnFailureListener { e ->
-                                    Log.e("Firestore", "Error storing user data: ${e.message}")
-                                    onResult(false)
-                                }
+                            }
                         } else {
                             Log.e("Firestore", "Error: Email is null")
                             onResult(false)
@@ -106,8 +137,10 @@ class LoginViewModel : ViewModel() {
                         onResult(false)
                     }
                 } catch (e: Exception) {
-                    Log.e("FirebaseAuth", "Google sign-in failed: ${e.message}")
-                    onResult(false)
+                    withContext(Dispatchers.Main) {
+                        _isLoading.value = false
+                        Log.e("LoginViewModel", "Authentication failed", e)
+                    }
                 } finally {
                     _isLoading.postValue(false)
                 }

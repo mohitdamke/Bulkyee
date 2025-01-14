@@ -1,6 +1,7 @@
 package com.example.bulkyee.screens
 
 import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -165,6 +166,7 @@ fun CheckOutScreen(
                                 navController = navController,
                                 totalPrice = totalPrice
                             )
+                            Toast.makeText(context, "Order is been placed successfully", Toast.LENGTH_LONG).show()
                             navController.navigate(Routes.HomeScreen.routes) {
                                 popUpTo(navController.graph.startDestinationId) { inclusive = true } // This will clear the back stack and ensure no back navigation
                             }

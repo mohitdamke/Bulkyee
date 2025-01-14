@@ -2,7 +2,6 @@ package com.example.bulkyee.screens
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -43,7 +42,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
@@ -72,8 +70,6 @@ import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.Gray
 import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.graphics.Color.Companion.White
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.StrokeCap.Companion.Square
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -204,78 +200,78 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
             .background(White10)
             .nestedScroll(scrollBehavior.nestedScrollConnection),
             topBar = {
-            CenterAlignedTopAppBar(
-                colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
-                    containerColor = White10,
-                    actionIconContentColor = White,
-                    navigationIconContentColor = White,
-                    scrolledContainerColor = Transparent,
-                ),
-                title = {
-                    Text(
-                        text = "Bulkyee",
-                        maxLines = 1,
-                        letterSpacing = 1.sp,
-                        color = Brown40,
-                        textAlign = TextAlign.Center,
-                        fontSize = FontDim.extraLargeTextSize,
-                        overflow = TextOverflow.Visible,
-                        fontFamily = FamilyDim.Bold,
-                    )
-                },
-                scrollBehavior = scrollBehavior,
-                actions = {
-                    Icon(
-                        Icons.Rounded.Search,
-                        contentDescription = "",
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clickable { navController.navigate(Routes.SearchScreen.routes) },
-                        tint = Brown40
-                    )
-                    Spacer(modifier = Modifier.padding(10.dp))
-                    Icon(
-                        Icons.Rounded.Menu,
-                        contentDescription = "",
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clickable {
-                                scope.launch {
-                                    drawerState.apply {
-                                        if (isClosed) open() else close()
-                                    }
-                                }
-                            },
-                        tint = Brown40
-                    )
-                },
-            )
-        }, floatingActionButton = {
-            ExtendedFloatingActionButton(
-                onClick = {
-                    val cartItems = items.filter { (selectedItems[it.itemId] ?: 0) > 0 }
-                    val cartData = cartItems.joinToString(",") {
-                        "${it.itemId}:${selectedItems[it.itemId] ?: 0}:${it.itemName}:${it.discountedPrice}:${it.realPrice}"
-                    }
-                    val encodedCartData = URLEncoder.encode(cartData, "UTF-8")
-                    navController.navigate(
-                        Routes.CheckOutScreen.routes.replace(
-                            oldValue = "{cartQueryParam}", newValue = encodedCartData
+                CenterAlignedTopAppBar(
+                    colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
+                        containerColor = White10,
+                        actionIconContentColor = White,
+                        navigationIconContentColor = White,
+                        scrolledContainerColor = Transparent,
+                    ),
+                    title = {
+                        Text(
+                            text = "Bulkyee",
+                            maxLines = 1,
+                            letterSpacing = 1.sp,
+                            color = Brown40,
+                            textAlign = TextAlign.Center,
+                            fontSize = FontDim.extraLargeTextSize,
+                            overflow = TextOverflow.Visible,
+                            fontFamily = FamilyDim.Bold,
                         )
-                    )
-                },
-                containerColor = Brown40,
-                contentColor = White,
-                icon = { Icon(Icons.Filled.ShoppingCart, "Proceed Buying.") },
-                text = {
-                    Text(
-                        text = "Proceed Buying",
-                        fontSize = FontDim.mediumTextSize,
-                        fontFamily = FamilyDim.Normal
-                    )
-                },
-            )
-        }
+                    },
+                    scrollBehavior = scrollBehavior,
+                    actions = {
+                        Icon(
+                            Icons.Rounded.Search,
+                            contentDescription = "",
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clickable { navController.navigate(Routes.SearchScreen.routes) },
+                            tint = Brown40
+                        )
+                        Spacer(modifier = Modifier.padding(10.dp))
+                        Icon(
+                            Icons.Rounded.Menu,
+                            contentDescription = "",
+                            modifier = Modifier
+                                .size(30.dp)
+                                .clickable {
+                                    scope.launch {
+                                        drawerState.apply {
+                                            if (isClosed) open() else close()
+                                        }
+                                    }
+                                },
+                            tint = Brown40
+                        )
+                    },
+                )
+            }, floatingActionButton = {
+                ExtendedFloatingActionButton(
+                    onClick = {
+                        val cartItems = items.filter { (selectedItems[it.itemId] ?: 0) > 0 }
+                        val cartData = cartItems.joinToString(",") {
+                            "${it.itemId}:${selectedItems[it.itemId] ?: 0}:${it.itemName}:${it.discountedPrice}:${it.realPrice}"
+                        }
+                        val encodedCartData = URLEncoder.encode(cartData, "UTF-8")
+                        navController.navigate(
+                            Routes.CheckOutScreen.routes.replace(
+                                oldValue = "{cartQueryParam}", newValue = encodedCartData
+                            )
+                        )
+                    },
+                    containerColor = Brown40,
+                    contentColor = White,
+                    icon = { Icon(Icons.Filled.ShoppingCart, "Proceed Buying.") },
+                    text = {
+                        Text(
+                            text = "Proceed Buying",
+                            fontSize = FontDim.mediumTextSize,
+                            fontFamily = FamilyDim.Normal
+                        )
+                    },
+                )
+            }
 
         ) { paddingValues ->
             Box(

@@ -21,7 +21,6 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.AttachMoney
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.ProductionQuantityLimits
@@ -34,7 +33,6 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.ProductionQuantityLimits
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.Menu
-import androidx.compose.material.icons.rounded.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -130,8 +128,13 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
     val items = homeViewModel.items.collectAsState().value
     val selectedItems = remember { mutableStateMapOf<String, Int>() }
 
+
     // Filtered items based on search query
     val filteredItems = items.filter { it.itemName.contains(searchQuery, ignoreCase = true) }
+
+
+
+
 
     LaunchedEffect(isLoggedIn) {
         val firebaseUser = Firebase.auth.currentUser
@@ -317,13 +320,14 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                 Spacer(modifier = modifier.padding(10.dp))
                 if (isLoading) {
                     // Show loading indicator
-                    Box(modifier = modifier.fillMaxSize()){
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .align(Alignment.Center)
-                            .size(50.dp)
-                    ) // Adjust the size to prevent it from taking full size)
-                }}
+                    Box(modifier = modifier.fillMaxSize()) {
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .align(Alignment.Center)
+                                .size(50.dp)
+                        ) // Adjust the size to prevent it from taking full size)
+                    }
+                }
 
                 if (isError && items.isEmpty()) {
                     Column(
@@ -417,8 +421,9 @@ fun ItemCard(
             ) {
                 Text(
                     text = item.itemName,
-                    fontSize = FontDim.largeTextSize,
-                    fontFamily = FamilyDim.Medium
+                    fontSize = FontDim.mediumTextSize,
+                    fontFamily = FamilyDim.SemiBold,
+                    color = Black
 
                 )
                 Spacer(modifier = Modifier.height(6.dp))
@@ -427,13 +432,13 @@ fun ItemCard(
                 ) {
                     Text(
                         text = "₹${item.discountedPrice}",
-                        fontSize = FontDim.largeTextSize,
-                        fontFamily = FamilyDim.SemiBold,
+                        fontSize = FontDim.mediumTextSize,
+                        fontFamily = FamilyDim.SemiBold, color = Black,
                         modifier = Modifier.padding(end = 10.dp)
                     )
                     Text(
                         text = "₹${item.realPrice}",
-                        fontSize = FontDim.mediumTextSize,
+                        fontSize = FontDim.smallTextSize,
                         fontFamily = FamilyDim.Normal,
                         textDecoration = TextDecoration.LineThrough,
                         color = Gray
@@ -443,8 +448,7 @@ fun ItemCard(
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(
                     modifier = Modifier
-                        .padding(8.dp)
-                        .background(MaterialTheme.colorScheme.surface, RoundedCornerShape(8.dp))
+                        .padding(4.dp)
                         .padding(horizontal = 4.dp, vertical = 2.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
@@ -452,7 +456,7 @@ fun ItemCard(
                     IconButton(
                         onClick = { if (quantity > 0) onQuantityChange(quantity - 1) },
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(20.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(Brown40)
                     ) {
@@ -468,6 +472,7 @@ fun ItemCard(
                         text = "$quantity",
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
+                        color = Black,
                         modifier = Modifier.padding(horizontal = 8.dp),
                         textAlign = TextAlign.Center
                     )
@@ -478,7 +483,7 @@ fun ItemCard(
                     IconButton(
                         onClick = { onQuantityChange(quantity + 1) },
                         modifier = Modifier
-                            .size(30.dp)
+                            .size(20.dp)
                             .clip(RoundedCornerShape(10.dp))
                             .background(Brown40)
                     ) {

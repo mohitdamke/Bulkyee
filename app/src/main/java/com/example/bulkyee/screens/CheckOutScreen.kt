@@ -126,12 +126,17 @@ fun CheckOutScreen(
                     phoneNumber = "$phoneNumber"
                 )
                 Text(
-                    "Items:", fontFamily = FamilyDim.Bold,
+                    text = "Items:", fontFamily = FamilyDim.Bold,
+                    color = Color.Black,
                     fontSize = FontDim.largeTextSize,
                 )
 
                 if (cartQueryParam.isNullOrEmpty()) {
-                    Text("No items in the cart", modifier = Modifier.padding(8.dp))
+                    Text(
+                        text = "No items in the cart",
+                        color = Color.Black,
+                        modifier = Modifier.padding(8.dp)
+                    )
                 } else
                     LazyColumn(
                         modifier = Modifier
@@ -151,6 +156,7 @@ fun CheckOutScreen(
                     "₹${totalPrice.toString().reversed().chunked(3).joinToString(",").reversed()}"
                 Text(
                     text = "Total: $formattedPrice",
+                    color = Color.Black,
                     fontSize = FontDim.largeTextSize,
                     fontFamily = FamilyDim.SemiBold,
                     modifier = Modifier.padding(bottom = 16.dp)
@@ -166,9 +172,15 @@ fun CheckOutScreen(
                                 navController = navController,
                                 totalPrice = totalPrice
                             )
-                            Toast.makeText(context, "Order is been placed successfully", Toast.LENGTH_LONG).show()
+                            Toast.makeText(
+                                context,
+                                "Order is been placed successfully",
+                                Toast.LENGTH_LONG
+                            ).show()
                             navController.navigate(Routes.HomeScreen.routes) {
-                                popUpTo(navController.graph.startDestinationId) { inclusive = true } // This will clear the back stack and ensure no back navigation
+                                popUpTo(navController.graph.startDestinationId) {
+                                    inclusive = true
+                                } // This will clear the back stack and ensure no back navigation
                             }
                         }
                     },
@@ -180,6 +192,7 @@ fun CheckOutScreen(
                 ) {
                     Text(
                         text = "Place Order", fontSize = FontDim.largeTextSize,
+                        color = Color.Black,
                         fontFamily = FamilyDim.SemiBold,
                     )
                 }
@@ -237,14 +250,17 @@ fun CartItem(modifier: Modifier = Modifier, item: Item) {
         ) {
             Text(
                 text = "${item.itemName} x ${item.quantity}", fontSize = FontDim.mediumTextSize,
+                color = Color.Black,
                 fontFamily = FamilyDim.Normal,
             )
             Text(
                 text = "Real Price: ₹${item.realPrice}", fontSize = FontDim.mediumTextSize,
+                color = Color.Black,
                 fontFamily = FamilyDim.Normal, textDecoration = TextDecoration.LineThrough
             )
             Text(
                 text = "Discounted Price: ₹${item.discountedPrice}",
+                color = Color.Black,
                 fontSize = FontDim.mediumTextSize,
                 fontFamily = FamilyDim.Normal,
             )
@@ -265,10 +281,12 @@ fun DeliveryAddressSection(
         Text(
             text = "Delivery Address:",
             fontFamily = FamilyDim.SemiBold,
+            color = Color.Black,
             fontSize = FontDim.largeTextSize
         )
         Text(
             text = address,
+            color = Color.Black,
             fontFamily = FamilyDim.Medium,
             fontSize = FontDim.mediumTextSize
         )
@@ -277,11 +295,13 @@ fun DeliveryAddressSection(
         Text(
             text = "Name:",
             fontFamily = FamilyDim.SemiBold,
+            color = Color.Black,
             fontSize = FontDim.largeTextSize
         )
         Text(
             text = name,
             fontFamily = FamilyDim.Medium,
+            color = Color.Black,
             fontSize = FontDim.mediumTextSize,
             modifier = Modifier.padding(vertical = 4.dp)
         )
@@ -291,11 +311,13 @@ fun DeliveryAddressSection(
         Text(
             text = "Shop Name:",
             fontFamily = FamilyDim.SemiBold,
+            color = Color.Black,
             fontSize = FontDim.largeTextSize
         )
         Text(
             text = shopName,
             fontFamily = FamilyDim.Medium,
+            color = Color.Black,
             fontSize = FontDim.mediumTextSize,
             modifier = Modifier.padding(vertical = 4.dp)
         )
@@ -305,11 +327,13 @@ fun DeliveryAddressSection(
         Text(
             text = "Email:",
             fontFamily = FamilyDim.SemiBold,
+            color = Color.Black,
             fontSize = FontDim.largeTextSize
         )
         Text(
             text = email,
             fontFamily = FamilyDim.Medium,
+            color = Color.Black,
             fontSize = FontDim.mediumTextSize,
             modifier = Modifier.padding(vertical = 4.dp)
         )
@@ -318,11 +342,13 @@ fun DeliveryAddressSection(
 
         Text(
             text = "Phone No:",
+            color = Color.Black,
             fontFamily = FamilyDim.SemiBold,
             fontSize = FontDim.largeTextSize
         )
         Text(
             text = phoneNumber,
+            color = Color.Black,
             fontFamily = FamilyDim.Medium,
             fontSize = FontDim.mediumTextSize,
             modifier = Modifier.padding(vertical = 4.dp)

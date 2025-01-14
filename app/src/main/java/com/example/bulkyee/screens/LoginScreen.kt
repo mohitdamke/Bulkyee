@@ -6,11 +6,13 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -37,6 +40,8 @@ import com.example.bulkyee.data.PreferencesHelper
 import com.example.bulkyee.dimensions.FamilyDim
 import com.example.bulkyee.dimensions.FontDim
 import com.example.bulkyee.navigation.Routes
+import com.example.bulkyee.ui.theme.Brown40
+import com.example.bulkyee.ui.theme.White10
 import com.example.bulkyee.viewmodel.LoginViewModel
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.common.api.ApiException
@@ -105,89 +110,74 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(White10)
             .padding(20.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+        horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        Spacer(modifier = Modifier.weight(1f))
 
-        Spacer(modifier = modifier.padding(top = 100.dp))
-        Column(
-            modifier = Modifier.padding(50.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-        ) {
+        Image(
+            painter = painterResource(id = R.drawable.ic_launcher_foreground),
+            contentDescription = "App Logo",
+            modifier = Modifier.size(100.dp)
+        )
+        Spacer(modifier = Modifier.height(20.dp))
+        Text(
+            text = "Bulkyee",
+            fontSize = FontDim.extraLargeTextSize,
+            fontFamily = FamilyDim.Bold,
+            color = Brown40
+        )
 
-            Row(
-                modifier = modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                    contentDescription = "doc",
-                    modifier = modifier.size(30.dp)
-                )
-                Spacer(modifier = modifier.padding(start = 10.dp))
-                Text(
-                    text = "Google Doc",
-                    fontSize = FontDim.mediumTextSize,
-                    fontFamily = FamilyDim.Bold,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier
-                )
-            }
-            Spacer(modifier = modifier.padding(top = 20.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+        Text(
+            text = "Order product easily with one click",
+            fontSize = FontDim.smallTextSize,
+            fontFamily = FamilyDim.Normal,
+            color = Color.Gray
+        )
 
-            Text(
-                text = "Collaborate in real-time with your team",
-                fontSize = FontDim.mediumTextSize,
-                fontFamily = FamilyDim.Bold,
-                textAlign = TextAlign.Center,
-                color = MaterialTheme.colorScheme.primary
-            )
-        }
-        Spacer(modifier = modifier.padding(top = 200.dp))
-
+        Spacer(modifier = Modifier.weight(1f))
         Button(
             onClick = {
                 val signInIntent = loginViewModel.getGoogleSignInClient(activity).signInIntent
                 launcher.launch(signInIntent)
             },
-            colors = ButtonDefaults.buttonColors(Color.White), // Set button background to white
-            modifier = modifier
+            colors = ButtonDefaults.buttonColors(Brown40),
+            modifier = Modifier
                 .fillMaxWidth()
-                .padding(10.dp),
-            elevation = ButtonDefaults.elevatedButtonElevation(2.dp) // Remove button shadow for flat look
+                .padding(16.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically // Center items vertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center
             ) {
                 Image(
-                    painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                    contentDescription = "Google",
-                    modifier = Modifier.size(30.dp) // Set image size
+                    painter = painterResource(id = R.drawable.google),
+                    contentDescription = "Google Icon",
+                    modifier = Modifier.size(30.dp)
                 )
-
-                Spacer(modifier = Modifier.width(8.dp)) // Add space between image and text
-
+                Spacer(modifier = Modifier.padding(8.dp))
                 Text(
                     text = "Sign in with Google",
-                    fontFamily = FamilyDim.Bold,
-                    fontSize = FontDim.mediumTextSize,
-                    modifier = Modifier.weight(1f), // Text takes up remaining space
-                    textAlign = TextAlign.Center, // Center the text horizontally
-                    color = Color.Black // Set text color to black for contrast on white button
-                )
+                        fontSize = FontDim.smallTextSize,
+                        fontFamily = FamilyDim.Normal,
+                        color = Color.White
+
+                    )
             }
-            if (isLoading) {
-                Column(
-                    modifier = modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
+        }
+        Spacer(modifier = Modifier.weight(1f))
+    }
+    if (isLoading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = MaterialTheme.colorScheme.primary)
         }
     }
 }

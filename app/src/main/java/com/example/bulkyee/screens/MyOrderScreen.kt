@@ -184,8 +184,7 @@ fun OrderItemView(order: Order) {
 fun StatusText(status: String) {
     val color = when (status) {
         "Success" -> Color.Green
-        "Pending" -> Color.Yellow
-        "Failed" -> Color.Red
+        "Pending" -> Color.Red
         else -> Color.Gray
     }
 

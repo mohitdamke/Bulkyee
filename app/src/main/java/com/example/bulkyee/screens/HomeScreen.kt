@@ -70,6 +70,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.Gray
+import androidx.compose.ui.graphics.Color.Companion.Transparent
 import androidx.compose.ui.graphics.Color.Companion.White
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.StrokeCap.Companion.Square
@@ -201,13 +202,14 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
         Scaffold(modifier = modifier
             .fillMaxSize()
             .background(White10)
-            .nestedScroll(scrollBehavior.nestedScrollConnection), topBar = {
+            .nestedScroll(scrollBehavior.nestedScrollConnection),
+            topBar = {
             CenterAlignedTopAppBar(
                 colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                     containerColor = White10,
                     actionIconContentColor = White,
                     navigationIconContentColor = White,
-                    scrolledContainerColor = Black,
+                    scrolledContainerColor = Transparent,
                 ),
                 title = {
                     Text(
@@ -318,8 +320,7 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(White10)
-                        .padding(10.dp),
+                        .background(White10),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Center
                 ) {
@@ -337,7 +338,6 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                         .fillMaxSize()
                         .background(White10)
                         .padding(paddingValues)
-                        .padding(10.dp)
                 ) {
                     items(items) { item ->
                         ItemCard(item = item,

@@ -47,7 +47,7 @@ class OrderViewModel : ViewModel() {
     fun placeOrder(
         context: Context,
         cartQueryParam: String?,
-        totalPrice : Int?,
+        totalPrice: Int?,
         navController: NavController
     ) {
         viewModelScope.launch(Dispatchers.IO) {
@@ -79,83 +79,82 @@ class OrderViewModel : ViewModel() {
                 }
             } ?: emptyList()
 
-            if (currentUserId == null) {
+            if (cartItems.isEmpty() || totalPrice == null) {
                 _isLoading.value = false
                 _isError.value = true
-                Toast.makeText(context, "User not logged in.", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    context,
+                    "Cart is empty or total price is invalid.",
+                    Toast.LENGTH_SHORT
+                ).show()
                 return@launch
             }
 
             // Prepare the order data
-            if (userId.isNotEmpty()) {
-                val orderId = System.currentTimeMillis().toString() // Generate unique order ID
-                val orderData = hashMapOf(
-                    "orderId" to orderId,
-                    "userId" to userId,
-                    "userName" to userName,
-                    "userEmail" to userEmail,
-                    "phoneNumber" to phoneNumber,
-                    "shopName" to shopName,
-                    "userAddress" to userAddress,
-                    "items" to cartItems.map {
-                        mapOf(
-                            "itemId" to it.itemId,
-                            "itemName" to it.itemName,
-                            "quantity" to it.quantity,
-                            "discountedPrice" to it.discountedPrice,
-                            "realPrice" to it.realPrice
-                        )
-                    },
-                    "totalPrice" to totalPrice, // Add totalPrice here
-                    "status" to "Pending" // Initial status of the order
-                )
+            val orderId = System.currentTimeMillis().toString() // Generate unique order ID
+            val orderData = hashMapOf(
+                "orderId" to orderId,
+                "userId" to userId,
+                "userName" to userName,
+                "userEmail" to userEmail,
+                "phoneNumber" to phoneNumber,
+                "shopName" to shopName,
+                "userAddress" to userAddress,
+                "items" to cartItems.map {
+                    mapOf(
+                        "itemId" to it.itemId,
+                        "itemName" to it.itemName,
+                        "quantity" to it.quantity,
+                        "discountedPrice" to it.discountedPrice,
+                        "realPrice" to it.realPrice
+                    )
+                },
+                "totalPrice" to totalPrice, // Add totalPrice here
+                "status" to "Pending", // Initial status of the order
+                "timestamp" to System.currentTimeMillis()
+            )
 
-                // Save order to Firestore
-                db.collection("users").document(userId).collection("orders").document(orderId)
+            try {
+                db.collection("user_orders")
+                    .document(orderId)
                     .set(orderData)
-                    .addOnSuccessListener {
-                        _isSuccess.value = true
-                        _isLoading.value = false
-                        Log.d("OrderViewModel", "Order placed successfully")
-                    }
-                    .addOnFailureListener { e ->
-                        _isSuccess.value = false
-                        _isLoading.value = false
-                        Log.e("OrderViewModel", "Error placing order: ${e.message}")
-                        Toast.makeText(context, "Failed to place order.", Toast.LENGTH_SHORT).show()
-                    }
+                    .await()
 
+                _isSuccess.value = true
+                _isLoading.value = false
+                Log.d("OrderViewModel", "Order placed successfully.")
+            } catch (e: Exception) {
+                _isSuccess.value = false
+                _isLoading.value = false
+                Log.e("OrderViewModel", "Error placing order: ${e.message}")
+                Toast.makeText(context, "Failed to place order.", Toast.LENGTH_SHORT).show()
             }
         }
     }
+
 
     // Fetch orders for a specific user (passed userId)
     fun fetchOrders(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
             _isLoading.value = true
             _isError.value = false
+
             try {
-                // Query orders by userId
-                val result = db.collection("orders")
+                val result = db.collection("user_orders")
                     .whereEqualTo("userId", userId)
                     .get()
                     .await()
 
-                Log.d(
-                    "OrderViewModel",
-                    "Fetched orders count: ${result.size()}"
-                ) // Log the number of orders
-
                 if (result.isEmpty) {
-                    _isError.value = false
+                    _orders.value = emptyList()
                     _isSuccess.value = true
                 } else {
-                    val orderList = result.map { it.toObject(Order::class.java) }
+                    val orderList = result.documents.mapNotNull { it.toObject(Order::class.java) }
                     _orders.value = orderList
                     _isSuccess.value = true
                 }
             } catch (e: Exception) {
-                Log.e("OrderViewModel", "Error fetching orders", e)
+                Log.e("OrderViewModel", "Error fetching orders: ${e.message}")
                 _isError.value = true
             } finally {
                 _isLoading.value = false

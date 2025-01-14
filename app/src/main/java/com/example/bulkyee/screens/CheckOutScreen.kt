@@ -163,7 +163,7 @@ fun CheckOutScreen(
                                 context = context,
                                 cartQueryParam = cartQueryParam,
                                 navController = navController,
-                                totalPrice = totalPrice // Pass totalPrice here
+                                totalPrice = totalPrice
                             )
                             navController.navigate(Routes.HomeScreen.routes) {
                                 popUpTo(navController.graph.startDestinationId) { inclusive = true } // This will clear the back stack and ensure no back navigation

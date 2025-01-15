@@ -104,6 +104,7 @@ fun InformationScreen(modifier: Modifier = Modifier, navController: NavControlle
             if (address.isBlank()) address = fetchedAddress
         }
     }
+
     Scaffold(
         modifier = modifier
             .fillMaxSize()

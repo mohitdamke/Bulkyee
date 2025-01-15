@@ -22,7 +22,18 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Latitude and Longitude values for debugging
+            buildConfigField("double", "TARGET_LAT", "21.1046759")
+            buildConfigField("double", "TARGET_LNG", "79.1290950")
+
+        }
         release {
+            // Latitude and Longitude values for release (adjust for production if needed)
+            buildConfigField("double", "TARGET_LAT", "21.1046759")
+            buildConfigField("double", "TARGET_LNG", "79.1290950")
+
+
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -30,6 +41,7 @@ android {
             )
         }
     }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -38,6 +50,7 @@ android {
         jvmTarget = "1.8"
     }
     buildFeatures {
+        buildConfig = true // Enable buildConfig
         compose = true
     }
     composeOptions {
@@ -51,7 +64,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -95,4 +107,5 @@ dependencies {
 
     implementation("com.google.android.gms:play-services-location:21.3.0")
 
+    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
 }

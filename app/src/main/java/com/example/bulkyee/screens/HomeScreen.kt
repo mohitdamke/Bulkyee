@@ -1,5 +1,18 @@
 package com.example.bulkyee.screens
 
+import android.Manifest
+import android.content.Context
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Location
+import android.location.LocationManager
+import android.os.Build
+import android.provider.Settings
+import android.util.Log
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -33,6 +46,9 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.ProductionQuantityLimits
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.Menu
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CenterAlignedTopAppBar
@@ -43,7 +59,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalDrawerSheet
 import androidx.compose.material3.ModalNavigationDrawer
 import androidx.compose.material3.NavigationDrawerItem
@@ -88,9 +103,12 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.app.ActivityCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import com.example.bulkyee.BuildConfig
 import com.example.bulkyee.R
+import com.example.bulkyee.createNotificationChannel
 import com.example.bulkyee.data.Item
 import com.example.bulkyee.data.NavigationItems
 import com.example.bulkyee.dimensions.FamilyDim
@@ -100,14 +118,23 @@ import com.example.bulkyee.ui.theme.Brown40
 import com.example.bulkyee.ui.theme.White10
 import com.example.bulkyee.viewmodel.HomeViewModel
 import com.example.bulkyee.viewmodel.LoginViewModel
+import com.google.accompanist.permissions.ExperimentalPermissionsApi
+import com.google.accompanist.permissions.isGranted
+import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 import com.google.firebase.Firebase
 import com.google.firebase.auth.auth
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
 
-@OptIn(ExperimentalMaterial3Api::class)
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
+
+    val targetLat = BuildConfig.TARGET_LAT
+    val targetLng = BuildConfig.TARGET_LNG
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
 
@@ -115,10 +142,7 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
     val homeViewModel: HomeViewModel = viewModel()
     val loginViewModel: LoginViewModel = viewModel()
     val isLoggedIn by loginViewModel.isUserLoggedIn.observeAsState(initial = false)
-
-    // Pull-to-refresh state
-    val isLoading by homeViewModel.isLoading.collectAsState(false)
-    val scope = rememberCoroutineScope()
+    var showEligibilityDialog by remember { mutableStateOf(false) }
 
     // Search query state
     var searchQuery by remember { mutableStateOf("") }
@@ -132,7 +156,105 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
     // Filtered items based on search query
     val filteredItems = items.filter { it.itemName.contains(searchQuery, ignoreCase = true) }
 
+    // Pull-to-refresh state
+    val isLoading by homeViewModel.isLoading.collectAsState(false)
+    val scope = rememberCoroutineScope()
 
+    // Permissions
+    val notificationPermissionState =
+        rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
+
+    // Permissions
+    val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
+
+    val fusedLocationClient: FusedLocationProviderClient =
+        remember { LocationServices.getFusedLocationProviderClient(context) }
+    val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
+
+    // Distance check state
+    var isWithinRadius by remember { mutableStateOf(false) }
+
+    // Launcher for location permission
+    val locationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        if (granted) {
+            // Check location and proceed with delivery eligibility
+            if (ActivityCompat.checkSelfPermission(
+                    context, Manifest.permission.ACCESS_FINE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(
+                    context, Manifest.permission.ACCESS_COARSE_LOCATION
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                // TODO: Consider calling
+                //    ActivityCompat#requestPermissions
+                // here to request the missing permissions, and then overriding
+                //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+                //                                          int[] grantResults)
+                // to handle the case where the user grants the permission. See the documentation
+                // for ActivityCompat#requestPermissions for more details.
+                return@rememberLauncherForActivityResult
+            }
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                if (location != null) {
+                    isWithinRadius = isUserWithinRadius(
+                        userLat = location.latitude,
+                        userLng = location.longitude,
+                        targetLat = targetLat,
+                        targetLng = targetLng,
+                        radius = 1000.0 // 1 km radius
+                    )
+                    showEligibilityDialog = isWithinRadius
+                }
+            }
+        } else {
+            // Show a message to inform the user they need to enable permissions
+            Toast.makeText(
+                context, "Location permission is required to proceed.", Toast.LENGTH_SHORT
+            ).show()
+        }
+    }
+
+
+    LaunchedEffect(isWithinRadius) {
+        // Only show dialog if the user is within the radius
+        showEligibilityDialog = isWithinRadius
+    }
+
+    LaunchedEffect(Unit) {
+        // Request location permission if not granted
+        if (!locationPermissionState.status.isGranted) {
+            locationPermissionLauncher.launch(android.Manifest.permission.ACCESS_FINE_LOCATION)
+        } else {
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                if (location != null) {
+                    isWithinRadius = isUserWithinRadius(
+                        userLat = location.latitude,
+                        userLng = location.longitude,
+                        targetLat = targetLat,
+                        targetLng = targetLng,
+                        radius = 1000.0 // 1 km radius
+                    )
+                }
+            }
+        }
+    }
+
+
+    // Create notification channel
+    LaunchedEffect(Unit) {
+        createNotificationChannel(context)
+    }
+
+    // Handle location and notification permissions
+    LaunchedEffect(Unit) {
+        if (!locationPermissionState.status.isGranted) {
+            locationPermissionState.launchPermissionRequest()
+        }
+        if (!notificationPermissionState.status.isGranted) {
+            notificationPermissionState.launchPermissionRequest()
+        }
+    }
 
 
 
@@ -184,55 +306,164 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
         mutableIntStateOf(0)
     }
 
+
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-
-    ModalNavigationDrawer(
-        scrimColor = DrawerDefaults.scrimColor, drawerState = drawerState, drawerContent = {
-            ModalDrawerSheet(
-                modifier = Modifier.background(White10) // Set the background color
+    // Check if location services are enabled
+    if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+        // Show a dialog asking the user to enable location services
+        AlertDialog(onDismissRequest = { }, title = {
+            Text(
+                text = "Location Services Disabled",
+                fontSize = FontDim.largeTextSize,
+                fontFamily = FamilyDim.Bold,
+                color = Black
+            )
+        }, text = {
+            Text(
+                text = "Please enable location services to proceed.",
+                fontSize = FontDim.mediumTextSize,
+                fontFamily = FamilyDim.Normal,
+            )
+        }, confirmButton = {
+            Button(
+                onClick = {
+                    context.startActivity(
+                        Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS) // Opens location settings
+                    )
+                }, colors = ButtonDefaults.buttonColors(Brown40)
             ) {
-                Spacer(modifier = Modifier.height(16.dp)) // Space (margin) from top
-
-                navigationItems.forEachIndexed { index, item ->
-                    NavigationDrawerItem(label = {
-                        Text(
-                            text = item.title,
-                            fontFamily = FamilyDim.Normal,
-                            fontSize = FontDim.mediumTextSize
-                        )
-                    }, selected = index == selectedItemIndex, onClick = {
-                        selectedItemIndex = index
-                        navController.navigate(item.route) {
-                            // Optional: Pop up the back stack to avoid navigating back to this screen
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                        scope.launch {
-                            drawerState.close()
-                        }
-                    }, icon = {
-                        Icon(
-                            imageVector = if (index == selectedItemIndex) {
-                                item.selectedIcon
-                            } else item.unselectedIcon,
-                            contentDescription = item.title,
-                            tint = Brown40 // Set the icon color
-                        )
-                    }, badge = { // Show Badge
-                        item.badgeCount?.let {
-                            Text(text = item.badgeCount.toString())
-                        }
-                    }, modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                Text(
+                    text = "Enable",
+                    fontSize = FontDim.mediumTextSize,
+                    fontFamily = FamilyDim.Normal,
+                    color = White
+                )
+            }
+        }, dismissButton = {
+            Button(
+                onClick = {
+                    // Handle dismiss logic (e.g., exit the app or navigate elsewhere)
+                }, colors = ButtonDefaults.buttonColors(Brown40)
+            ) {
+                Text(
+                    text = "Cancel",
+                    fontSize = FontDim.mediumTextSize,
+                    fontFamily = FamilyDim.Normal,
+                    color = White
+                )
+            }
+        }, containerColor = White10, titleContentColor = Black, textContentColor = Black
+        )
+    } else {
+        // Request location permissions
+        if (locationPermissionState.status.isGranted) {
+            // Permission granted, proceed with location-based actions
+            fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+                if (location != null) {
+                    isWithinRadius = isUserWithinRadius(
+                        userLat = location.latitude,
+                        userLng = location.longitude,
+                        targetLat = targetLat,
+                        targetLng = targetLng,
+                        radius = 1000.0 // 1 km radius
                     )
                 }
             }
-        }, gesturesEnabled = true
-    ) {
-        Scaffold(modifier = modifier
-            .fillMaxSize()
-            .background(White10)
-            .nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = {
+        } else {
+            // Permission is not granted, request it
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+
+
+        // Show eligibility dialog based on condition
+        if (showEligibilityDialog) {
+            Log.d("HomeScreen TAG", "Eligibility Dialog should be shown")
+            AlertDialog(
+                onDismissRequest = { showEligibilityDialog = false },
+                title = {
+                    Text(
+                        text = "Order Eligibility Status",
+                        fontSize = FontDim.largeTextSize,
+                        fontFamily = FamilyDim.Bold,
+                        color = Black
+                    )
+                },
+                text = {
+                    Text(
+                        text = if (isWithinRadius) {
+                            "You are eligible to place an order as you are within the delivery area."
+                        } else {
+                            "You are not eligible to place an order as you are outside the delivery area."
+                        },
+                        fontSize = FontDim.mediumTextSize,
+                        fontFamily = FamilyDim.Normal,
+                    )
+                },
+                confirmButton = {
+                    Button(modifier = modifier,
+                        colors = ButtonDefaults.buttonColors(Brown40),
+                        onClick = { showEligibilityDialog = false }) {
+                        Text(
+                            text = "OK",
+                            fontSize = FontDim.mediumTextSize,
+                            fontFamily = FamilyDim.Normal,
+                            color = White
+                        )
+                    }
+                },
+                containerColor = White10,
+                titleContentColor = Black,
+                textContentColor = Black,
+                modifier = modifier
+            )
+        }
+
+        ModalNavigationDrawer(
+            scrimColor = DrawerDefaults.scrimColor, drawerState = drawerState, drawerContent = {
+                ModalDrawerSheet(
+                    modifier = Modifier.background(White10) // Set the background color
+                ) {
+                    Spacer(modifier = Modifier.height(16.dp)) // Space (margin) from top
+
+                    navigationItems.forEachIndexed { index, item ->
+                        NavigationDrawerItem(label = {
+                            Text(
+                                text = item.title,
+                                fontFamily = FamilyDim.Normal,
+                                fontSize = FontDim.mediumTextSize
+                            )
+                        }, selected = index == selectedItemIndex, onClick = {
+                            selectedItemIndex = index
+                            navController.navigate(item.route) {
+                                // Optional: Pop up the back stack to avoid navigating back to this screen
+                                launchSingleTop = true
+                                restoreState = true
+                            }
+                            scope.launch {
+                                drawerState.close()
+                            }
+                        }, icon = {
+                            Icon(
+                                imageVector = if (index == selectedItemIndex) {
+                                    item.selectedIcon
+                                } else item.unselectedIcon,
+                                contentDescription = item.title,
+                                tint = Brown40 // Set the icon color
+                            )
+                        }, badge = { // Show Badge
+                            item.badgeCount?.let {
+                                Text(text = item.badgeCount.toString())
+                            }
+                        }, modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                        )
+                    }
+                }
+            }, gesturesEnabled = true
+        ) {
+            Scaffold(modifier = modifier
+                .fillMaxSize()
+                .background(White10)
+                .nestedScroll(scrollBehavior.nestedScrollConnection), topBar = {
                 CenterAlignedTopAppBar(
                     colors = TopAppBarDefaults.centerAlignedTopAppBarColors(
                         containerColor = White10,
@@ -300,87 +531,92 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                 )
             }
 
-        ) { paddingValues ->
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(White10)
-                    .padding(paddingValues)
-                    .padding(10.dp)
-            ) {
-                SearchOutlineText(
-                    value = searchQuery,
-                    onValueChange = { searchQuery = it },
-                    label = "Search items",
-                    icons = Icons.Default.Search,
-                    keyboardOptions = KeyboardOptions(
-                        keyboardType = KeyboardType.Text, imeAction = ImeAction.Search
+            ) { paddingValues ->
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(White10)
+                        .padding(paddingValues)
+                        .padding(10.dp)
+                ) {
+                    SearchOutlineText(
+                        value = searchQuery,
+                        onValueChange = { searchQuery = it },
+                        label = "Search items",
+                        icons = Icons.Default.Search,
+                        keyboardOptions = KeyboardOptions(
+                            keyboardType = KeyboardType.Text, imeAction = ImeAction.Search
+                        )
                     )
-                )
-                Spacer(modifier = modifier.padding(10.dp))
-                if (isLoading) {
-                    // Show loading indicator
-                    Box(modifier = modifier.fillMaxSize()) {
-                        CircularProgressIndicator(
+                    Spacer(modifier = modifier.padding(10.dp))
+
+
+
+                    if (isLoading) {
+                        // Show loading indicator
+                        Box(modifier = modifier.fillMaxSize()) {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .align(Alignment.Center)
+                                    .size(50.dp)
+                            ) // Adjust the size to prevent it from taking full size)
+                        }
+                    }
+
+                    if (isError && items.isEmpty()) {
+                        Column(
                             modifier = Modifier
-                                .align(Alignment.Center)
-                                .size(50.dp)
-                        ) // Adjust the size to prevent it from taking full size)
+                                .fillMaxSize()
+                                .background(White10)
+                                .padding(10.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            // Show error message
+                            Text(
+                                text = "An error occurred while adding the item. Please try again.",
+                                color = Color.Red,
+                                fontSize = FontDim.mediumTextSize,
+                                fontFamily = FamilyDim.Medium,
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
                     }
-                }
-
-                if (isError && items.isEmpty()) {
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(White10)
-                            .padding(10.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        // Show error message
-                        Text(
-                            text = "An error occurred while adding the item. Please try again.",
-                            color = Color.Red,
-                            fontSize = 18.sp,
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
-                }
 
 
-                // Show loading or no items message based on the state of the items list
-                if (isSuccess && items.isEmpty()) {
+                    // Show loading or no items message based on the state of the items list
+                    if (isSuccess && items.isEmpty()) {
 
-                    // Show "No items available" message
-                    // Show a message indicating no items are available
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(White10),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
+                        // Show "No items available" message
+                        // Show a message indicating no items are available
+                        Column(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(White10),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
 
-                        Text(
-                            text = "No items available.",
-                            fontSize = FontDim.mediumTextSize,
-                            fontFamily = FamilyDim.Bold,
-                            color = Black
-                        )
-                    }
-                } else if (isSuccess) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .background(White10)
-                    ) {
-                        items(filteredItems) { item ->
-                            ItemCard(item = item,
-                                quantity = selectedItems[item.itemId] ?: 0,
-                                onQuantityChange = { newQuantity ->
-                                    selectedItems[item.itemId] = newQuantity
-                                })
+                            Text(
+                                text = "No items available.",
+                                fontSize = FontDim.mediumTextSize,
+                                fontFamily = FamilyDim.Bold,
+                                color = Black
+                            )
+                        }
+                    } else if (isSuccess) {
+                        LazyColumn(
+                            modifier = Modifier
+                                .fillMaxSize()
+                                .background(White10)
+                        ) {
+                            items(filteredItems) { item ->
+                                ItemCard(item = item,
+                                    quantity = selectedItems[item.itemId] ?: 0,
+                                    onQuantityChange = { newQuantity ->
+                                        selectedItems[item.itemId] = newQuantity
+                                    })
+                            }
                         }
                     }
                 }
@@ -388,6 +624,7 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
         }
     }
 }
+
 
 @Composable
 fun ItemCard(
@@ -433,7 +670,8 @@ fun ItemCard(
                     Text(
                         text = "₹${item.discountedPrice}",
                         fontSize = FontDim.mediumTextSize,
-                        fontFamily = FamilyDim.SemiBold, color = Black,
+                        fontFamily = FamilyDim.SemiBold,
+                        color = Black,
                         modifier = Modifier.padding(end = 10.dp)
                     )
                     Text(
@@ -545,4 +783,13 @@ private fun SearchOutlineText(
         shape = RoundedCornerShape(100.dp),
         minLines = 1
     )
+}
+
+
+fun isUserWithinRadius(
+    userLat: Double, userLng: Double, targetLat: Double, targetLng: Double, radius: Double
+): Boolean {
+    val results = FloatArray(1)
+    Location.distanceBetween(userLat, userLng, targetLat, targetLng, results)
+    return results[0] <= radius
 }

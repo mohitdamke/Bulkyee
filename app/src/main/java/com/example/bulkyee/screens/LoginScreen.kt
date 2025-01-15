@@ -25,6 +25,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -59,26 +62,29 @@ fun LoginScreen(modifier: Modifier = Modifier, navController: NavController) {
     val isLoading by loginViewModel.isLoading.observeAsState(false)
     val isLoggedIn by loginViewModel.isUserLoggedIn.observeAsState(initial = false)
 
+    // State for loading and navigation flag
+    var isNavigating by remember { mutableStateOf(false) }
 
-    LaunchedEffect(isLoggedIn) {
-        // Check if the user is logged in via Firebase
-        val firebaseUser = Firebase.auth.currentUser
 
-        if (firebaseUser != null) {
-            // User is logged in, navigate to Information Screen
-            navController.navigate(Routes.InformationScreen.routes) {
-                popUpTo(0) // Clear backstack
-            }
-        } else {
-            // If user is not logged in, check setup completion and navigate accordingly
-            if (PreferencesHelper.isUserSetupCompleted(context)) {
+    LaunchedEffect(isLoggedIn, isNavigating) {
+        if (!isNavigating) {
+            val firebaseUser = Firebase.auth.currentUser
+
+            if (firebaseUser != null) {
+                // User is logged in, navigate to Information Screen
+                navController.navigate(Routes.InformationScreen.routes) {
+                    popUpTo(0) // Clear backstack
+                }
+                isNavigating = true
+            } else if (PreferencesHelper.isUserSetupCompleted(context)) {
+                // If user setup is completed, navigate to HomeScreen
                 navController.navigate(Routes.HomeScreen.routes) {
                     popUpTo(0) // Clear backstack
                 }
+                isNavigating = true
             }
         }
     }
-
 
     // Result launcher to handle Google Sign-In
     val launcher = rememberLauncherForActivityResult(

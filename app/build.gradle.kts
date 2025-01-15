@@ -108,4 +108,6 @@ dependencies {
     implementation("com.google.android.gms:play-services-location:21.3.0")
 
     implementation("com.google.accompanist:accompanist-permissions:0.32.0")
+
+    implementation("com.google.android.gms:play-services-ads:22.1.0") // Latest version as of now
 }

@@ -34,17 +34,19 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.ContactPage
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.PrivacyTip
 import androidx.compose.material.icons.filled.ProductionQuantityLimits
 import androidx.compose.material.icons.filled.Remove
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.outlined.ContactPage
 import androidx.compose.material.icons.outlined.Home
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.PrivacyTip
 import androidx.compose.material.icons.outlined.ProductionQuantityLimits
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.rounded.Menu
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
@@ -218,7 +220,7 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
 
     LaunchedEffect(isWithinRadius) {
         // Only show dialog if the user is within the radius
-        showEligibilityDialog = isWithinRadius
+        showEligibilityDialog = !isWithinRadius
     }
 
     LaunchedEffect(Unit) {
@@ -294,10 +296,15 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
             unselectedIcon = Icons.Outlined.ProductionQuantityLimits,
             route = Routes.MyOrderScreen.routes,
         ), NavigationItems(
-            title = "Settings",
-            selectedIcon = Icons.Filled.Settings,
-            unselectedIcon = Icons.Outlined.Settings,
-            route = Routes.SettingScreen.routes
+            title = "Privacy Policy",
+            selectedIcon = Icons.Filled.PrivacyTip,
+            unselectedIcon = Icons.Outlined.PrivacyTip,
+            route = Routes.PrivacyPolicy.routes
+        ), NavigationItems(
+            title = "Contact Us",
+            selectedIcon = Icons.Filled.ContactPage,
+            unselectedIcon = Icons.Outlined.ContactPage,
+            route = Routes.ContactUsScreen.routes
         )
     )
 

@@ -7,14 +7,15 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.example.bulkyee.screens.CheckOutScreen
+import com.example.bulkyee.screens.ContactUsScreen
 import com.example.bulkyee.screens.EditProfileScreen
 import com.example.bulkyee.screens.HomeScreen
 import com.example.bulkyee.screens.InformationScreen
 import com.example.bulkyee.screens.LoginScreen
 import com.example.bulkyee.screens.MyOrderScreen
+import com.example.bulkyee.screens.PrivacyPolicyScreen
 import com.example.bulkyee.screens.ProfileScreen
 import com.example.bulkyee.screens.SearchScreen
-import com.example.bulkyee.screens.SettingScreen
 import com.example.bulkyee.screens.SplashScreen
 
 @Composable
@@ -41,8 +42,11 @@ fun NavigationControl() {
         composable(route = Routes.ProfileScreen.routes) {
             ProfileScreen(navController = navController)
         }
-        composable(route = Routes.SettingScreen.routes) {
-            SettingScreen(navController = navController)
+        composable(route = Routes.PrivacyPolicy.routes) {
+            PrivacyPolicyScreen(navController = navController)
+        }
+        composable(route = Routes.ContactUsScreen.routes) {
+            ContactUsScreen(navController = navController)
         }
         composable(route = Routes.MyOrderScreen.routes) {
             MyOrderScreen(navController = navController)
@@ -57,7 +61,6 @@ fun NavigationControl() {
             val cartQueryParam = backStackEntry.arguments?.getString("cartQueryParam")
             CheckOutScreen(navController = navController, cartQueryParam = cartQueryParam)
         }
-
 
 
     }

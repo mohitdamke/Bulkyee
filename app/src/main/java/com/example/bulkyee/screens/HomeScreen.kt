@@ -27,6 +27,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentHeight
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -87,6 +88,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.focusModifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.graphics.Color.Companion.Gray
@@ -105,6 +107,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
@@ -123,6 +126,9 @@ import com.example.bulkyee.viewmodel.LoginViewModel
 import com.google.accompanist.permissions.ExperimentalPermissionsApi
 import com.google.accompanist.permissions.isGranted
 import com.google.accompanist.permissions.rememberPermissionState
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.AdView
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
 import com.google.firebase.Firebase
@@ -161,6 +167,9 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
     // Pull-to-refresh state
     val isLoading by homeViewModel.isLoading.collectAsState(false)
     val scope = rememberCoroutineScope()
+
+    val adId = "ca-app-pub-3940256099942544/9214589741"
+
 
     // Permissions
     val notificationPermissionState =
@@ -241,7 +250,6 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
             }
         }
     }
-
 
     // Create notification channel
     LaunchedEffect(Unit) {
@@ -510,6 +518,21 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                             tint = Brown40
                         )
                     },
+                )
+            }, bottomBar = {
+                AndroidView(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .height(50.dp) // You can set a fixed height for the ad
+                        .padding(2.dp),
+                    factory = { context ->
+                        AdView(context).apply {
+                            setAdSize(AdSize.BANNER)
+                            adUnitId = adId
+
+                            loadAd(AdRequest.Builder().build())
+                        }
+                    }
                 )
             }, floatingActionButton = {
                 ExtendedFloatingActionButton(

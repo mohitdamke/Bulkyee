@@ -14,6 +14,7 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.example.bulkyee.navigation.NavigationControl
 import com.example.bulkyee.ui.theme.BulkyeeTheme
+import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.location.LocationServices
 import java.util.Properties
 
@@ -21,6 +22,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
+        MobileAds.initialize(this) { }
         setContent {
             BulkyeeTheme {
                 NavigationControl()

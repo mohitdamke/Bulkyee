@@ -686,13 +686,25 @@ fun ItemCard(
             ) {
                 Text(
                     text = item.itemName,
-                    fontSize = FontDim.mediumTextSize,
+                    fontSize = FontDim.largeTextSize,
                     fontFamily = FamilyDim.SemiBold,
                     color = Black
 
                 )
                 Spacer(modifier = Modifier.height(6.dp))
-                Row(
+
+                if (item.itemDesc != "") {
+                    Text(
+                        text = item.itemDesc,
+                        fontSize = FontDim.mediumTextSize,
+                        fontFamily = FamilyDim.Normal,
+                        color = Black,
+                        maxLines = 2
+
+                    )
+                    Spacer(modifier = Modifier.height(6.dp))
+                }
+                    Row(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(

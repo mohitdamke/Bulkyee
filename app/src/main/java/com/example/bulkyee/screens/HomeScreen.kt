@@ -704,7 +704,7 @@ fun ItemCard(
                     )
                     Spacer(modifier = Modifier.height(6.dp))
                 }
-                    Row(
+                Row(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Text(

@@ -480,7 +480,13 @@ fun parseCartItems(cartQueryParam: String?): List<Item> {
 }
 
 // In CheckOutScreen.kt
-fun isUserWithinDeliveryRadius(userLat: Double, userLng: Double, targetLat: Double, targetLng: Double, radius: Double): Boolean {
+fun isUserWithinDeliveryRadius(
+    userLat: Double,
+    userLng: Double,
+    targetLat: Double,
+    targetLng: Double,
+    radius: Double
+): Boolean {
     val results = FloatArray(1)
     Location.distanceBetween(userLat, userLng, targetLat, targetLng, results)
     return results[0] <= radius

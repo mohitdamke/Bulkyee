@@ -2,6 +2,7 @@ package com.example.bulkyee.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -9,7 +10,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.rounded.ArrowBack
-import androidx.compose.material.icons.rounded.Edit
 import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -19,6 +19,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -87,15 +88,38 @@ fun ContactUsScreen(modifier: Modifier = Modifier, navController: NavController)
         },
     ) { paddingValues ->
         Column(
-            modifier = modifier
+            modifier = Modifier
                 .fillMaxSize()
                 .background(White10)
                 .padding(paddingValues)
-                .padding(16.dp)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Text(text = "ContactUs")
+            // Display Name
+            Text(
+                text = "Name: Dhiraj Damke",
+                fontSize = 18.sp,
+                color = Brown40,
+                modifier = Modifier.padding(8.dp)
+            )
 
-        }}
+            // Display Address
+            Text(
+                text = "Address: Plot no 4 New Prerna Nagar, Nagpur, Maharashtra, 440034",
+                fontSize = 18.sp,
+                color = Brown40,
+                modifier = Modifier.padding(8.dp),
+                textAlign = TextAlign.Center
+            )
 
-
+            // Display Contact Number
+            Text(
+                text = "Contact: +(91 9881199408)",
+                fontSize = 18.sp,
+                color = Brown40,
+                modifier = Modifier.padding(8.dp)
+            )
+        }
+    }
 }

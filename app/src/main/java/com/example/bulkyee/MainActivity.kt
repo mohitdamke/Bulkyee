@@ -15,8 +15,6 @@ import androidx.core.app.NotificationManagerCompat
 import com.example.bulkyee.navigation.NavigationControl
 import com.example.bulkyee.ui.theme.BulkyeeTheme
 import com.google.android.gms.ads.MobileAds
-import com.google.android.gms.location.LocationServices
-import java.util.Properties
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -68,14 +66,4 @@ fun showOrderNotification(context: Context) {
     }
     notificationManager.notify(1, builder.build())
 
-}
-fun getCoordinatesFromProperties(context: Context): Pair<Double, Double> {
-    val properties = Properties()
-    val inputStream = context.assets.open("local.properties") // Load the properties file
-    properties.load(inputStream)
-
-    val targetLat = properties.getProperty("targetLat", "0.0").toDouble()
-    val targetLng = properties.getProperty("targetLng", "0.0").toDouble()
-
-    return Pair(targetLat, targetLng)
 }

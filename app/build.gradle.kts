@@ -5,11 +5,11 @@ plugins {
 }
 
 android {
-    namespace = "com.example.bulkyee"
+    namespace = "com.example.mybulkyee"
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.example.bulkyee"
+        applicationId = "com.example.mybulkyee"
         minSdk = 26
         targetSdk = 34
         versionCode = 1

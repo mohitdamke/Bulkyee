@@ -55,7 +55,7 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mybulkyee.BuildConfig
 import com.example.mybulkyee.R
@@ -86,7 +86,7 @@ fun CheckOutScreen(
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val context = LocalContext.current
     val fusedLocationClient = LocationServices.getFusedLocationProviderClient(context)
-    val orderViewModel: OrderViewModel = viewModel()
+    val orderViewModel: OrderViewModel = hiltViewModel()
     val isLoading by orderViewModel.isLoading.collectAsState(false)
     val scope = rememberCoroutineScope()
     val isSuccess by orderViewModel.isSuccess.collectAsState(false)
@@ -97,6 +97,7 @@ fun CheckOutScreen(
     val phoneNumber = userInfo["phoneNumber"]
     val address = userInfo["address"]
     val email = userInfo["email"]
+
 
     // Location Check
 
@@ -262,27 +263,38 @@ fun CheckOutScreen(
                         onClick = {
                             scope.launch {
                                 Log.d("CheckOutScreen", "Place Order button clicked")
+
+                                // Check if the cart is not empty
                                 if (cartItems.isNotEmpty()) {
+                                    // Place the order via the ViewModel
                                     orderViewModel.placeOrder(
                                         context = context,
                                         cartQueryParam = cartQueryParam,
                                         navController = navController,
                                         totalPrice = totalPrice
                                     )
-
+                                    // Show success toast if order is placed successfully
                                     Toast.makeText(
                                         context,
                                         "Order is been placed successfully",
                                         Toast.LENGTH_LONG
                                     ).show()
 
+                                    // Optionally show a notification about the order
                                     showOrderNotification(context)
-
-                                    navController.navigate(Routes.HomeScreen.routes) {
-                                        popUpTo(navController.graph.startDestinationId) {
-                                            inclusive = true
-                                        } // This will clear the back stack and ensure no back navigation
-                                    }
+                                } else {
+                                    // Handle error in case the order failed
+                                    Toast.makeText(
+                                        context,
+                                        "Order placement failed",
+                                        Toast.LENGTH_LONG
+                                    ).show()
+                                }
+                                showOrderNotification(context)
+                                navController.navigate(Routes.HomeScreen.routes) {
+                                    popUpTo(navController.graph.startDestinationId) {
+                                        inclusive = true
+                                    } // This will clear the back stack and ensure no back navigation
                                 }
                             }
                         },

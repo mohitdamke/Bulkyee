@@ -33,6 +33,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mybulkyee.R
@@ -50,10 +51,12 @@ fun LoginScreen(
     modifier: Modifier = Modifier,
     navController: NavController
 ) {
-    val loginViewModel: LoginViewModel = viewModel()
+    val loginViewModel: LoginViewModel = hiltViewModel()
     val context = LocalContext.current as Activity
     val currentUser = Firebase.auth.currentUser
     var isLoading by remember { mutableStateOf(false) }
+    var errorMessage by remember { mutableStateOf("") }
+
 
     // Automatically navigate if already logged in
     LaunchedEffect(currentUser) {
@@ -79,14 +82,13 @@ fun LoginScreen(
                         popUpTo(Routes.LoginScreen.routes) { inclusive = true }
                     }
                 } else {
-                    loginViewModel.showErrorMessage(
-                        context,
+                    errorMessage =
                         "Authentication failed. Please try again."
-                    )
+
                 }
             }
         } catch (e: ApiException) {
-            loginViewModel.showErrorMessage(context, "Google Sign-In failed: ${e.localizedMessage}")
+            errorMessage = "Google Sign-In failed: ${e.localizedMessage ?: "Unknown error"}"
         }
     }
 

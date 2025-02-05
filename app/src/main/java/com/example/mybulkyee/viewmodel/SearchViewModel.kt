@@ -9,6 +9,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.withContext
 
 class SearchViewModel : ViewModel() {
 
@@ -33,28 +34,26 @@ class SearchViewModel : ViewModel() {
         _isLoading.value = true
         viewModelScope.launch(Dispatchers.IO) {
             try {
-                // Lowercase the query for case-insensitive comparison
-                val lowerCaseQuery = query.lowercase()
-
                 val result = db.collection("items")
+                    .whereGreaterThanOrEqualTo("itemName", query)
+                    .whereLessThanOrEqualTo("itemName", query + "\uf8ff") // Firestore text search trick
                     .get()
                     .await()
 
-                // Filter the results by comparing lowercase item names
-                val itemList = result.filter { document ->
-                    val itemName = document.getString("itemName")?.lowercase() ?: ""
-                    itemName.contains(lowerCaseQuery)
-                }.map { it.toObject(Item::class.java) }
+                val itemList = result.documents.mapNotNull { it.toObject(Item::class.java) }
 
-                if (itemList.isEmpty()) {
-                    _searchResults.value = emptyList()
-                } else {
+                withContext(Dispatchers.Main) {
                     _searchResults.value = itemList
+                    _errorMessage.value = if (itemList.isEmpty()) "No products found" else null
                 }
             } catch (e: Exception) {
-                _errorMessage.value = "Failed to load products: ${e.message}"
+                withContext(Dispatchers.Main) {
+                    _errorMessage.value = "Failed to load products: ${e.message}"
+                }
             } finally {
-                _isLoading.value = false
+                withContext(Dispatchers.Main) {
+                    _isLoading.value = false
+                }
             }
         }
     }

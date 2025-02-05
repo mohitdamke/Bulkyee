@@ -24,6 +24,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,6 +38,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mybulkyee.data.PreferencesHelper
@@ -54,26 +56,33 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(modifier: Modifier = Modifier, navController: NavController) {
+    val profileViewModel: ProfileViewModel = hiltViewModel()
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val userProfile by profileViewModel.userProfile.collectAsState()
 
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
     val currentUserId = Firebase.auth.currentUser?.uid
-    val profileViewModel: ProfileViewModel = viewModel()
-    val loginViewModel: LoginViewModel = viewModel()
+    val loginViewModel: LoginViewModel = hiltViewModel()
     var name by remember { mutableStateOf("") }
     var shopName by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
 
-    LaunchedEffect(true) {
-        val userProfile = profileViewModel.fetchUserProfile()
-        Log.d("ProfileScreen", "Fetched user profile: $userProfile")
-        name = userProfile["name"] ?: ""
-        shopName = userProfile["shopName"] ?: ""
-        phoneNumber = userProfile["phoneNumber"] ?: ""
-        address = userProfile["address"] ?: ""
+    // Fetch profile data when the screen loads
+    LaunchedEffect(Unit) {
+        profileViewModel.fetchUserProfile()
+    }
+
+    // Fetch existing profile data
+    LaunchedEffect(userProfile) {
+        userProfile?.let {
+            name = it["name"] ?: ""
+            shopName = it["shopName"] ?: ""
+            phoneNumber = it["phoneNumber"] ?: ""
+            address = it["address"] ?: ""
+        }
     }
 
 

@@ -15,7 +15,9 @@ import androidx.core.app.NotificationManagerCompat
 import com.example.mybulkyee.navigation.NavigationControl
 import com.example.mybulkyee.ui.theme.BulkyeeTheme
 import com.google.android.gms.ads.MobileAds
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)

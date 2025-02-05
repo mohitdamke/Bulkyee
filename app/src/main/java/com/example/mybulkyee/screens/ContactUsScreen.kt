@@ -22,6 +22,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Color.Companion.Black
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
@@ -100,7 +101,7 @@ fun ContactUsScreen(modifier: Modifier = Modifier, navController: NavController)
             Text(
                 text = "Name: Dhiraj Damke",
                 fontSize = 18.sp,
-                color = Brown40,
+                color = Black,
                 modifier = Modifier.padding(8.dp)
             )
 
@@ -108,7 +109,7 @@ fun ContactUsScreen(modifier: Modifier = Modifier, navController: NavController)
             Text(
                 text = "Address: Plot no 4 New Prerna Nagar, Nagpur, Maharashtra, 440034",
                 fontSize = 18.sp,
-                color = Brown40,
+                color = Black,
                 modifier = Modifier.padding(8.dp),
                 textAlign = TextAlign.Center
             )
@@ -117,7 +118,14 @@ fun ContactUsScreen(modifier: Modifier = Modifier, navController: NavController)
             Text(
                 text = "Contact: +(91 9881199408)",
                 fontSize = 18.sp,
-                color = Brown40,
+                color = Black,
+                modifier = Modifier.padding(8.dp)
+            )
+            // Display Contact Number
+            Text(
+                text = "Email: dhirajenterprises13@gmail.com",
+                fontSize = 18.sp,
+                color = Black,
                 modifier = Modifier.padding(8.dp)
             )
         }

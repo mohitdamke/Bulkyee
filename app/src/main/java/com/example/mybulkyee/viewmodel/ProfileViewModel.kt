@@ -1,137 +1,109 @@
 package com.example.mybulkyee.viewmodel
 
 import android.content.Context
-import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.mybulkyee.data.PreferencesHelper
+import com.example.mybulkyee.domain.repository.ProfileRepository
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class ProfileViewModel : ViewModel() {
+@HiltViewModel
+class ProfileViewModel @Inject constructor(private val repository: ProfileRepository) : ViewModel() {
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _userProfile = MutableStateFlow<Map<String, String>?>(null)
+    val userProfile: StateFlow<Map<String, String>?> = _userProfile
+
+    private val _isSuccess = MutableStateFlow(false)
+    val isSuccess: StateFlow<Boolean> = _isSuccess
 
     private val db = FirebaseFirestore.getInstance()
     private val firebaseUser = FirebaseAuth.getInstance().currentUser
-    private val userId = firebaseUser!!.uid
 
-    // Save user details to Firestore
+    private val _isError = MutableStateFlow<String?>(null)
+    val isError: StateFlow<String?> = _isError
 
     fun saveUserDetails(
-        context: Context,
         name: String,
         shopName: String,
         phoneNumber: String,
         address: String,
         email: String
     ) {
-        viewModelScope.launch(Dispatchers.IO) {
-            val firebaseUser = FirebaseAuth.getInstance().currentUser
-            val userId = firebaseUser!!.uid
-            val userMap = hashMapOf(
-                "name" to name,
-                "shopName" to shopName,
-                "phoneNumber" to phoneNumber,
-                "address" to address,
-                "email" to email,
-            )
+        val userMap = mapOf(
+            "name" to name,
+            "shopName" to shopName,
+            "phoneNumber" to phoneNumber,
+            "address" to address,
+            "email" to email
+        )
 
-            val db = FirebaseFirestore.getInstance()
-            db.collection("users").document(userId)
-                .set(userMap)
-                .addOnSuccessListener {
-                    // Details saved successfully
-                    Toast.makeText(context, "Details saved to Firestore", Toast.LENGTH_SHORT).show()
-                }
-                .addOnFailureListener { e ->
-                    // Handle error
-                    Toast.makeText(
-                        context,
-                        "Error saving details: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    )
-                        .show()
-                }
+        viewModelScope.launch(Dispatchers.IO) {
+            _isLoading.value = true
+            val result = repository.saveUserDetails(userMap)
+            _isSuccess.value = result
+            _isError.value = if (result) null else "Failed to save details"
+            _isLoading.value = false
         }
     }
 
-    // Fetch user details from Firestore
-    fun fetchUserDetails(
-        context: Context,
-        onSuccess: (
-            name: String,
-            shopName: String,
-            phoneNumber: String,
-            address: String,
-            email: String
-
-        ) -> Unit
-    ) {
-        viewModelScope.launch(Dispatchers.IO) {
-
-            val firebaseUser = FirebaseAuth.getInstance().currentUser
-            val userId = firebaseUser!!.uid
-            val db = FirebaseFirestore.getInstance()
-
+    fun fetchUserProfile() {
+        firebaseUser?.uid?.let { userId ->
             db.collection("users").document(userId)
                 .get()
                 .addOnSuccessListener { document ->
                     if (document.exists()) {
-                        // Retrieve and use the user details from Firestore
-                        val name = document.getString("name") ?: ""
-                        val shopName = document.getString("shopName") ?: ""
-                        val phoneNumber = document.getString("phoneNumber") ?: ""
-                        val address = document.getString("address") ?: ""
-                        val email = document.getString("email") ?: ""
-                        onSuccess(name, shopName, phoneNumber, address, email)
-                    } else {
-                        // No user details found, you can show a message or navigate to the information screen
-                        Toast.makeText(context, "User details not found", Toast.LENGTH_SHORT).show()
+                        val data = document.data?.mapValues { it.value.toString() } ?: emptyMap()
+                        _userProfile.value = data
                     }
                 }
-                .addOnFailureListener { e ->
-                    // Handle failure
-                    Toast.makeText(
-                        context,
-                        "Error fetching user details: ${e.message}",
-                        Toast.LENGTH_SHORT
-                    ).show()
+                .addOnFailureListener {
+                    _userProfile.value = emptyMap() // Return an empty map on failure
                 }
         }
     }
 
+    fun fetchUserDetails(context: Context, onSuccess: (String, String, String, String, String) -> Unit) {
+        viewModelScope.launch(Dispatchers.IO) {
+            _isLoading.value = true
+            try {
+                val userDetails = repository.fetchUserDetails() // Fetch data from Firestore or local storage
+                _isLoading.value = false
+                if (userDetails.isNotEmpty()) {
+                    val name = userDetails["name"] ?: ""
+                    val shopName = userDetails["shopName"] ?: ""
+                    val phoneNumber = userDetails["phoneNumber"] ?: ""
+                    val address = userDetails["address"] ?: ""
+                    val email = userDetails["email"] ?: ""
 
-    // Function to fetch profile data from Firestore
-    suspend fun fetchUserProfile(): Map<String, String> {
-
-        val userMap = mutableMapOf<String, String>()
-        try {
-            val document = db.collection("users").document(userId).get().await()
-            if (document.exists()) {
-                userMap["name"] = document.getString("name") ?: ""
-                userMap["shopName"] = document.getString("shopName") ?: ""
-                userMap["phoneNumber"] = document.getString("phoneNumber") ?: ""
-                userMap["address"] = document.getString("address") ?: ""
+                    onSuccess(name, shopName, phoneNumber, address, email)
+                } else {
+                    _isError.value = "No user details found"
+                }
+            } catch (e: Exception) {
+                _isLoading.value = false
+                _isError.value = "Error fetching user details: ${e.localizedMessage}"
             }
-        } catch (e: Exception) {
-            // Handle any exception
         }
-        return userMap
     }
 
-    // Function to update profile data
+
     fun updateProfile(
         name: String,
         shopName: String,
         phoneNumber: String,
         address: String,
-        context: Context,
-        onSuccess: () -> Unit,
-        onFailure: (String) -> Unit
+        onSuccess: () -> Unit
     ) {
-        val userMap = hashMapOf(
+        val userMap = mapOf(
             "name" to name,
             "shopName" to shopName,
             "phoneNumber" to phoneNumber,
@@ -139,21 +111,12 @@ class ProfileViewModel : ViewModel() {
         )
 
         viewModelScope.launch(Dispatchers.IO) {
-            try {
-                db.collection("users").document(userId).set(userMap).await()
-                PreferencesHelper.saveUserInfo(
-                    context = context,
-                    name = name,
-                    shopName = shopName,
-                    phoneNumber = phoneNumber,
-                    address = address,
-                    email = firebaseUser?.email ?: "No Email",
-                    keyUser = true
-                )
-                onSuccess()
-            } catch (e: Exception) {
-                onFailure(e.message ?: "Error updating profile")
-            }
+            _isLoading.value = true
+            val result = repository.updateProfile(userMap)
+            _isSuccess.value = result
+            _isError.value = if (result) null else "Failed to update profile"
+            _isLoading.value = false
+            if (result) onSuccess()
         }
     }
 }

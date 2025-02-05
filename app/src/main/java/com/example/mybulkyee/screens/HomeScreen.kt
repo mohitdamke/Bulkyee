@@ -100,6 +100,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.core.app.ActivityCompat
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mybulkyee.BuildConfig
@@ -136,9 +137,9 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
 
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
     val context = LocalContext.current
-    val homeViewModel: HomeViewModel = viewModel()
-    val loginViewModel: LoginViewModel = viewModel()
-    val cartViewModel: CartViewModel = viewModel()
+    val homeViewModel: HomeViewModel = hiltViewModel()
+    val loginViewModel: LoginViewModel = hiltViewModel()
+    val cartViewModel: CartViewModel = hiltViewModel()
     val isLoggedIn by loginViewModel.isUserLoggedIn.observeAsState(initial = false)
     val selectedItems by cartViewModel.selectedItems.collectAsState()
     var showEligibilityDialog by remember { mutableStateOf(false) }
@@ -438,11 +439,11 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                 icon = { Icon(Icons.Filled.ShoppingCart, "Proceed Buying.") },
                 text = {
                     Text(
-                            text = "Proceed Buying",
-                            fontSize = FontDim.mediumTextSize,
-                            fontFamily = FamilyDim.Normal
-                        )
-                       },
+                        text = "Proceed Buying",
+                        fontSize = FontDim.mediumTextSize,
+                        fontFamily = FamilyDim.Normal
+                    )
+                },
             )
         }
 

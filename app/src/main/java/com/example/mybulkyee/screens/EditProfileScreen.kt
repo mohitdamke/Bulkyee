@@ -31,6 +31,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.material3.rememberTopAppBarState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -47,6 +48,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mybulkyee.dimensions.FamilyDim
@@ -62,26 +64,33 @@ import kotlinx.coroutines.launch
 @Composable
 fun EditProfileScreen(modifier: Modifier = Modifier, navController: NavController) {
 
-    val profileViewModel: ProfileViewModel = viewModel()
+    val profileViewModel: ProfileViewModel = hiltViewModel()
     var name by remember { mutableStateOf("") }
     var shopName by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
     var address by remember { mutableStateOf("") }
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
+    val userProfile by profileViewModel.userProfile.collectAsState()
 
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val firebaseUser = FirebaseAuth.getInstance().currentUser
-    val userId = firebaseUser!!.uid
+    val userId = firebaseUser?.uid ?: return // Exit if user is null
     val db = FirebaseFirestore.getInstance()
 
+    // Fetch profile data when the screen loads
+    LaunchedEffect(Unit) {
+        profileViewModel.fetchUserProfile()
+    }
+
     // Fetch existing profile data
-    LaunchedEffect(true) {
-        val userProfile = profileViewModel.fetchUserProfile()
-        name = userProfile["name"] ?: ""
-        shopName = userProfile["shopName"] ?: ""
-        phoneNumber = userProfile["phoneNumber"] ?: ""
-        address = userProfile["address"] ?: ""
+    LaunchedEffect(userProfile) {
+        userProfile?.let {
+            name = it["name"] ?: ""
+            shopName = it["shopName"] ?: ""
+            phoneNumber = it["phoneNumber"] ?: ""
+            address = it["address"] ?: ""
+        }
     }
 
 
@@ -149,7 +158,6 @@ fun EditProfileScreen(modifier: Modifier = Modifier, navController: NavControlle
                                 shopName = shopName,
                                 phoneNumber = phoneNumber,
                                 address = address,
-                                context = context,
                                 onSuccess = {
                                     Toast.makeText(
                                         context,
@@ -158,13 +166,7 @@ fun EditProfileScreen(modifier: Modifier = Modifier, navController: NavControlle
                                     ).show()
                                     navController.popBackStack()  // Go back to Profile screen
                                 },
-                                onFailure = { error ->
-                                    Toast.makeText(
-                                        context,
-                                        "Error updating profile: $error",
-                                        Toast.LENGTH_SHORT
-                                    ).show()
-                                }
+
                             )
                         }
                     }

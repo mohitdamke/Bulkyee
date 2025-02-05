@@ -36,6 +36,7 @@ import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mybulkyee.data.Order
@@ -56,7 +57,7 @@ fun MyOrderScreen(modifier: Modifier = Modifier, navController: NavController) {
 
     val context = LocalContext.current
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
-    val orderViewModel: OrderViewModel = viewModel()
+    val orderViewModel: OrderViewModel = hiltViewModel()
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
     val orders by orderViewModel.orders.collectAsState()
     val isLoading by orderViewModel.isLoading.collectAsState()

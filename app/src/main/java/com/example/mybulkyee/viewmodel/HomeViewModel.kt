@@ -3,27 +3,27 @@ package com.example.mybulkyee.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.mybulkyee.data.Item
-import com.google.firebase.firestore.FirebaseFirestore
+import com.example.mybulkyee.domain.repository.ItemRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.tasks.await
+import javax.inject.Inject
 
-class HomeViewModel : ViewModel() {
-
-    private val db = FirebaseFirestore.getInstance()
+@HiltViewModel
+class HomeViewModel @Inject constructor (private val repository: ItemRepository) : ViewModel() {
 
     private val _items = MutableStateFlow<List<Item>>(emptyList())
     val items: StateFlow<List<Item>> = _items
 
-    private val _isLoading = MutableStateFlow<Boolean>(false)
+    private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    private val _isSuccess = MutableStateFlow<Boolean>(false)
+    private val _isSuccess = MutableStateFlow(false)
     val isSuccess: StateFlow<Boolean> = _isSuccess
 
-    private val _isError = MutableStateFlow<Boolean>(false)
+    private val _isError = MutableStateFlow(false)
     val isError: StateFlow<Boolean> = _isError
 
     init {
@@ -34,24 +34,17 @@ class HomeViewModel : ViewModel() {
         viewModelScope.launch(Dispatchers.IO) {
             _isLoading.value = true
             _isError.value = false
-            try {
-                val result = db.collection("items").get().await()
-                if (result.isEmpty) {
-                    _isError.value = false
-                    _isSuccess.value = true
 
-                } else {
-                    val itemList = result.map { it.toObject(Item::class.java) }
-                    _items.value = itemList
-                    _isSuccess.value = true
-                }
-            } catch (e: Exception) {
+            val itemList = repository.fetchItems()
+
+            if (itemList.isNotEmpty()) {
+                _items.value = itemList
+                _isSuccess.value = true
+            } else {
                 _isError.value = true
-            } finally {
-                _isLoading.value = false
             }
+
+            _isLoading.value = false
         }
     }
-
-
 }

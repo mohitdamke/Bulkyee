@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mybulkyee.data.PreferencesHelper
@@ -63,8 +64,8 @@ import com.google.firebase.auth.FirebaseAuth
 fun InformationScreen(modifier: Modifier = Modifier, navController: NavController) {
 
     val context = LocalContext.current
-    val loginViewModel: LoginViewModel = viewModel()
-    val profileViewModel: ProfileViewModel = viewModel()
+    val loginViewModel: LoginViewModel = hiltViewModel()
+    val profileViewModel: ProfileViewModel = hiltViewModel()
     val firebase = FirebaseAuth.getInstance()
     val currentUserId = firebase.currentUser?.uid
     val scrollBehavior = TopAppBarDefaults.enterAlwaysScrollBehavior(rememberTopAppBarState())
@@ -137,7 +138,6 @@ fun InformationScreen(modifier: Modifier = Modifier, navController: NavControlle
                         ).show()
                     } else {
                         profileViewModel.saveUserDetails(
-                            context = context,
                             name = name,
                             shopName = shopName,
                             phoneNumber = phoneNumber,

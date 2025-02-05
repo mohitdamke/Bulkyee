@@ -3,10 +3,14 @@ package com.example.mybulkyee.viewmodel
 import androidx.lifecycle.ViewModel
 import com.example.mybulkyee.data.CartItem
 import com.example.mybulkyee.data.Item
+import com.example.mybulkyee.domain.repository.CartRepository
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import javax.inject.Inject
 
-class CartViewModel : ViewModel() {
+@HiltViewModel
+class CartViewModel @Inject constructor(private val repository: CartRepository) : ViewModel() {
 
     private val _selectedItems = MutableStateFlow<Map<String, Int>>(emptyMap())
     val selectedItems: StateFlow<Map<String, Int>> = _selectedItems
@@ -18,25 +22,10 @@ class CartViewModel : ViewModel() {
     }
 
     fun getCartItems(items: List<Item>): List<CartItem> {
-        return _selectedItems.value.mapNotNull { (itemId, quantity) ->
-            items.find { it.itemId == itemId }?.let {
-                CartItem(
-                    itemId = it.itemId,
-                    itemName = it.itemName,
-                    quantity = quantity,
-                    discountedPrice = it.discountedPrice,
-                    realPrice = it.realPrice
-                )
-            }
-        }
+        return repository.getCartItems(_selectedItems.value, items)
     }
 
     fun getTotalCost(items: List<Item>): Double {
-        return _selectedItems.value.mapNotNull { (itemId, quantity) ->
-            items.find { it.itemId == itemId }?.discountedPrice?.times(quantity)
-        }.sumOf { it.toDouble() }
+        return repository.getTotalCost(_selectedItems.value, items)
     }
-
-
-
 }

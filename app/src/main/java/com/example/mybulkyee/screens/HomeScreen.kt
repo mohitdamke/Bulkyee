@@ -151,8 +151,7 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
     val isSuccess by homeViewModel.isSuccess.collectAsState(false)
     val isError by homeViewModel.isError.collectAsState(false)
     val items = homeViewModel.items.collectAsState().value
-//    val selectedItems = remember { mutableStateMapOf<String, Int>() }
-    val totalCost = cartViewModel.getTotalCost(items)
+
     // Filtered items based on search query
     val filteredItems = items.filter { it.itemName.contains(searchQuery, ignoreCase = true) }
 
@@ -162,9 +161,7 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
 
     val adId = "ca-app-pub-3940256099942544/9214589741"
 
-    // Permissions
-    val notificationPermissionState =
-        rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
+
     val locationPermissionState = rememberPermissionState(Manifest.permission.ACCESS_FINE_LOCATION)
 
     val fusedLocationClient: FusedLocationProviderClient = remember {
@@ -465,8 +462,6 @@ fun HomeScreen(modifier: Modifier = Modifier, navController: NavController) {
                     )
                 )
                 Spacer(modifier = modifier.padding(10.dp))
-
-
 
                 if (isLoading) {
                     // Show loading indicator

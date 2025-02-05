@@ -106,11 +106,7 @@ fun LoginScreen(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Spacer(modifier = Modifier.weight(1f))
-            Image(
-                painter = painterResource(id = R.drawable.ic_launcher_foreground),
-                contentDescription = "App Logo",
-                modifier = Modifier.size(100.dp)
-            )
+
             Spacer(modifier = Modifier.height(20.dp))
             Text(
                 text = "Bulkyee",

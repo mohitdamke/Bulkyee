@@ -37,7 +37,8 @@ android {
             buildConfigField("double", "TARGET_LNG", "79.1290950")
 
 
-            isMinifyEnabled = false
+            isMinifyEnabled = true
+            isShrinkResources = true
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"

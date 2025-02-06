@@ -103,6 +103,7 @@ import androidx.core.app.ActivityCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
+import coil.compose.rememberAsyncImagePainter
 import com.example.mybulkyee.BuildConfig
 import com.example.mybulkyee.R
 import com.example.mybulkyee.data.Item
@@ -558,7 +559,9 @@ fun ItemCard(
             modifier = Modifier.padding(10.dp), verticalAlignment = Alignment.CenterVertically
         ) {
             Image(
-                painter = painterResource(id = R.drawable.ic_launcher_background), // Placeholder image
+                painter = rememberAsyncImagePainter(model = item.imageUrl
+                    , error = painterResource(id = R.drawable.ic_launcher_foreground), // your error image
+                    placeholder = painterResource(id = R.drawable.ic_launcher_foreground)),
                 contentDescription = "Item Image",
                 modifier = Modifier
                     .clip(CircleShape)

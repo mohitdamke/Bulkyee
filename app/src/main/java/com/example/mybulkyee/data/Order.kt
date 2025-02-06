@@ -12,7 +12,7 @@ data class Order(
     val userId: String = "",           // User ID
     val items: List<OrderItem> = listOf(), // List of Order Items
     val totalPrice: Int = 0,           // Total Price
-    val timestamp: Long = 0L           // Timestamp
+    val timestamp: Long = 0L,           // Timestamp
 )
 
 data class OrderItem(

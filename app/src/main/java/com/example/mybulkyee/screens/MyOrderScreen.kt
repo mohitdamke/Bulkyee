@@ -1,7 +1,10 @@
 package com.example.mybulkyee.screens
 
+import android.util.Log
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -40,6 +43,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.example.mybulkyee.data.Order
+import com.example.mybulkyee.data.OrderItem
 import com.example.mybulkyee.dimensions.FamilyDim
 import com.example.mybulkyee.dimensions.FontDim
 import com.example.mybulkyee.navigation.Routes
@@ -61,6 +65,7 @@ fun MyOrderScreen(modifier: Modifier = Modifier, navController: NavController) {
     val userId = FirebaseAuth.getInstance().currentUser?.uid ?: ""
     val orders by orderViewModel.orders.collectAsState()
     val isLoading by orderViewModel.isLoading.collectAsState()
+    val isSuccess by orderViewModel.isSuccess.collectAsState()
     val isError by orderViewModel.isError.collectAsState()
 
     // Fetch orders for the user
@@ -82,12 +87,27 @@ fun MyOrderScreen(modifier: Modifier = Modifier, navController: NavController) {
         when {
             isLoading -> {
                 // Show loading indicator
-                Box(modifier = modifier.fillMaxSize().background(White10)) {
+                Box(
+                    modifier = modifier
+                        .fillMaxSize()
+                        .background(White10)
+                ) {
                     CircularProgressIndicator(
                         modifier = Modifier
                             .align(Alignment.Center)
                             .size(50.dp)
                     )
+                }
+            }
+
+            isSuccess -> {
+                Toast.makeText(context, "Order is been placed", Toast.LENGTH_LONG).show()
+                Log.d("OrderViewModel", "Navigating to HomeScreen")
+
+                navController.navigate(Routes.HomeScreen.routes) {
+                    popUpTo(Routes.CheckOutScreen.routes) { inclusive = true }
+                    launchSingleTop = true
+
                 }
             }
 
@@ -117,7 +137,8 @@ fun MyOrderScreen(modifier: Modifier = Modifier, navController: NavController) {
 
             else -> {
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .fillMaxSize()
                         .background(White10)
                         .padding(paddingValues)
                 ) {
@@ -140,35 +161,63 @@ fun OrderItemView(order: Order) {
         colors = CardDefaults.cardColors(Color.White),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
-        Column(modifier = Modifier.background(White10).padding(16.dp)) {
+        Column(
+            modifier = Modifier
+                .background(White10)
+                .padding(16.dp)
+        ) {
+
+            // Order ID
             Text(
                 text = "Order ID: ${order.orderId}",
                 fontSize = FontDim.mediumTextSize,
-                fontFamily = FamilyDim.Medium, color = Color.Black,
+                fontFamily = FamilyDim.Medium,
+                color = Color.Black
             )
             Spacer(modifier = Modifier.height(8.dp))
 
+            // Order Status
             StatusText(status = order.status)
             Spacer(modifier = Modifier.height(8.dp))
+
+            // Date
             Text(
                 text = "Date: ${formatDate(order.timestamp)}",
                 fontSize = FontDim.mediumTextSize,
-                fontFamily = FamilyDim.Medium, color = Color.Black,
+                fontFamily = FamilyDim.Medium,
+                color = Color.Black
             )
-            Spacer(modifier = Modifier.height(8.dp))
-            Row(modifier = Modifier.fillMaxWidth()) {
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Items list
+
+
                 Text(
-                    text = "Items: ",
+                    text = "Items:",
                     fontSize = FontDim.mediumTextSize,
-                    fontFamily = FamilyDim.Medium, color = Color.Black,
+                    fontFamily = FamilyDim.Medium,
+                    color = Color.Black
                 )
-                Text(
-                    text = order.items.joinToString(", ") { it.itemName }.replace("+", " "),
-                    fontSize = FontDim.mediumTextSize,
-                    fontFamily = FamilyDim.Medium, color = Color.Black,
-                )
-            }
-            Spacer(modifier = Modifier.height(8.dp))
+                order.items.forEach { item ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 4.dp)
+                    ) {
+                        Spacer(modifier = Modifier.padding(horizontal = 16.dp))
+                        Text(
+                            text = "${item.itemName.replace("+", " ")} x ${item.quantity}",
+                            fontSize = FontDim.mediumTextSize,
+                            fontFamily = FamilyDim.Medium,
+                            color = Color.Black
+                        )
+                    }
+                }
+            
+
+            Spacer(modifier = Modifier.height(14.dp))
+
+            // Total Price
             Text(
                 text = "Total Price: ₹${order.totalPrice}",
                 fontSize = FontDim.mediumTextSize,
@@ -178,6 +227,7 @@ fun OrderItemView(order: Order) {
         }
     }
 }
+
 
 @Composable
 fun StatusText(status: String) {

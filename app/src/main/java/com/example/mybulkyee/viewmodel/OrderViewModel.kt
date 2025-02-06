@@ -1,11 +1,15 @@
 package com.example.mybulkyee.viewmodel
 
 import android.content.Context
+import android.util.Log
+import android.widget.Toast
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.example.mybulkyee.data.Order
 import com.example.mybulkyee.domain.repository.OrderRepository
+import com.example.mybulkyee.navigation.Routes
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -29,9 +33,11 @@ class OrderViewModel @Inject constructor(private val repository: OrderRepository
     val isError: StateFlow<Boolean> = _isError
 
     init {
-        repository.getCurrentUserId()?.let { fetchOrders(it) }
+        val currentUserId = FirebaseAuth.getInstance().currentUser?.uid
+        if (!currentUserId.isNullOrEmpty()) {
+            fetchOrders(userId = currentUserId)
+        }
     }
-
 
     fun placeOrder(
         context: Context,
@@ -39,18 +45,43 @@ class OrderViewModel @Inject constructor(private val repository: OrderRepository
         totalPrice: Int?,
         navController: NavController
     ) {
-        viewModelScope.launch {
-            repository.placeOrder(context, cartQueryParam, totalPrice, navController)
+        viewModelScope.launch(Dispatchers.IO) {
+            _isLoading.value = true
+            val success = repository.placeOrder(context, cartQueryParam, totalPrice)
+            _isLoading.value = false
+
+            if (success) {
+                _isSuccess.value = true
+                Log.d("OrderViewModel", "Order placed successfully!")
+
+                // Check if the navigation is proceeding properly
+                Log.d("OrderViewModel", "Navigating to HomeScreen")
+
+            } else {
+                _isError.value = true
+                Log.e("OrderViewModel", "Failed to place order")
+                Toast.makeText(context, "Failed to place order. Try again.", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
 
     fun fetchOrders(userId: String) {
         viewModelScope.launch(Dispatchers.IO) {
-            _isLoading.value = true  // Start loading
-            _orders.value = repository.fetchOrders(userId)  // Fetch orders from repository
-            _isLoading.value = false  // End loading
+            _isLoading.value = true
+            _isError.value = false
+
+            val result = repository.fetchOrders(userId)
+
+            if (result.isNotEmpty()) {
+                _orders.value = result
+            } else {
+                _isError.value = true
+            }
+
+            _isLoading.value = false
         }
     }
+
 
 }

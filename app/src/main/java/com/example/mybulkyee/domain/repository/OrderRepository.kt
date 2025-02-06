@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.navigation.NavController
 import com.example.mybulkyee.data.Order
 import com.example.mybulkyee.navigation.Routes
+import com.example.mybulkyee.screens.showOrderNotification
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.tasks.await
@@ -41,6 +42,7 @@ class OrderRepository @Inject constructor(private val db: FirebaseFirestore, pri
 
         try {
             db.collection("user_orders").document(orderId).set(orderData).await()
+            showOrderNotification(context)
             Toast.makeText(context, "Order placed successfully!", Toast.LENGTH_SHORT).show()
 
             // Navigate to Order Confirmation screen

@@ -1,14 +1,17 @@
 package com.example.mybulkyee.screens
 
 import android.Manifest
+import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
+import android.os.Build
 import android.util.Log
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
@@ -55,17 +58,16 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.example.mybulkyee.BuildConfig
 import com.example.mybulkyee.R
-import com.example.mybulkyee.createNotificationChannel
 import com.example.mybulkyee.data.Item
 import com.example.mybulkyee.data.PreferencesHelper
 import com.example.mybulkyee.dimensions.FamilyDim
 import com.example.mybulkyee.dimensions.FontDim
 import com.example.mybulkyee.navigation.Routes
-import com.example.mybulkyee.showOrderNotification
 import com.example.mybulkyee.ui.theme.Brown40
 import com.example.mybulkyee.ui.theme.White10
 import com.example.mybulkyee.viewmodel.OrderViewModel
@@ -75,6 +77,7 @@ import com.google.accompanist.permissions.rememberPermissionState
 import com.google.android.gms.location.LocationServices
 import kotlinx.coroutines.launch
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalPermissionsApi::class)
 @Composable
 fun CheckOutScreen(
@@ -98,6 +101,7 @@ fun CheckOutScreen(
     val address = userInfo["address"]
     val email = userInfo["email"]
 
+    val notificationPermissionState = rememberPermissionState(Manifest.permission.POST_NOTIFICATIONS)
 
     // Location Check
 
@@ -131,6 +135,14 @@ fun CheckOutScreen(
 
     LaunchedEffect(Unit) {
         createNotificationChannel(context)
+
+
+        // Request notification permission (only for Android 13+)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (!notificationPermissionState.status.isGranted) {
+                notificationPermissionState.launchPermissionRequest()
+            }
+        }
         if (!locationPermissionState.status.isGranted) {
             locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         } else {
@@ -273,15 +285,7 @@ fun CheckOutScreen(
                                         navController = navController,
                                         totalPrice = totalPrice
                                     )
-                                    // Show success toast if order is placed successfully
-                                    Toast.makeText(
-                                        context,
-                                        "Order is been placed successfully",
-                                        Toast.LENGTH_LONG
-                                    ).show()
-
                                     // Optionally show a notification about the order
-                                    showOrderNotification(context)
                                 } else {
                                     // Handle error in case the order failed
                                     Toast.makeText(
@@ -290,7 +294,6 @@ fun CheckOutScreen(
                                         Toast.LENGTH_LONG
                                     ).show()
                                 }
-                                showOrderNotification(context)
                                 navController.navigate(Routes.HomeScreen.routes) {
                                     popUpTo(navController.graph.startDestinationId) {
                                         inclusive = true
@@ -525,4 +528,43 @@ fun sendDeliveryEligibilityNotification(context: Context, isEligible: Boolean) {
         .build()
 
     notificationManager.notify(notificationId, notification)
+}
+
+
+fun createNotificationChannel(context: Context) {
+    val name = "Bulkyee"
+    val descriptionText = "This is bulkyee app"
+    val importance = NotificationManager.IMPORTANCE_DEFAULT
+    val channel = NotificationChannel("Bulkyee App", name, importance).apply {
+        description = descriptionText
+    }
+    val notificationManager: NotificationManager =
+        context.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    notificationManager.createNotificationChannel(channel)
+}
+
+fun showOrderNotification(context: Context) {
+    val notificationManager = NotificationManagerCompat.from(context)
+    val builder = NotificationCompat.Builder(context, "Bulkyee App")
+        .setSmallIcon(R.drawable.bulkyeelogo)
+        .setContentTitle("Order Placed")
+        .setContentText("Your order has been placed successfully!")
+        .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+
+    if (ActivityCompat.checkSelfPermission(
+            context,
+            Manifest.permission.POST_NOTIFICATIONS
+        ) != PackageManager.PERMISSION_GRANTED
+    ) {
+        // TODO: Consider calling
+        //    ActivityCompat#requestPermissions
+        // here to request the missing permissions, and then overriding
+        //   public void onRequestPermissionsResult(int requestCode, String[] permissions,
+        //                                          int[] grantResults)
+        // to handle the case where the user grants the permission. See the documentation
+        // for ActivityCompat#requestPermissions for more details.
+        return
+    }
+    notificationManager.notify(1, builder.build())
+
 }

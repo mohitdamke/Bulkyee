@@ -1,6 +1,7 @@
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
+    id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.gms.google-services")
     id("kotlin-kapt")
     id("com.google.dagger.hilt.android")
@@ -8,12 +9,13 @@ plugins {
 }
 
 android {
-    namespace = "com.example.mybulkyee"
+    namespace = "com.store.mybulkyee"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.mybulkyee"
+        applicationId = "com.store.mybulkyee"
         minSdk = 26
+        //noinspection OldTargetApi
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
@@ -57,9 +59,9 @@ android {
         buildConfig = true // Enable buildConfig
         compose = true
     }
-    composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.1"
-    }
+//    composeOptions {
+//        kotlinCompilerExtensionVersion = "1.5.1"
+//    }
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
@@ -85,39 +87,39 @@ dependencies {
     debugImplementation(libs.androidx.ui.tooling)
     debugImplementation(libs.androidx.ui.test.manifest)
 
-    implementation("androidx.credentials:credentials:1.3.0")
+    implementation("androidx.credentials:credentials:1.5.0")
     implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
-    implementation("com.google.android.gms:play-services-auth:21.3.0")
+    implementation("com.google.android.gms:play-services-auth:21.4.0")
     implementation("com.google.firebase:firebase-analytics")
     implementation("com.google.firebase:firebase-firestore")
-    implementation("com.google.accompanist:accompanist-systemuicontroller:0.27.0")
-    implementation("com.google.firebase:firebase-auth-ktx:23.1.0")
+    implementation("com.google.accompanist:accompanist-systemuicontroller:0.36.0")
+    implementation("com.google.firebase:firebase-auth-ktx:23.2.1")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
-    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.10.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2")
 
     implementation("androidx.compose.material:material-icons-extended")
 
     // Coroutine Lifecycle Scopes
-    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.8.3")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-ktx:2.9.4")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
-    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.8.3")
+    implementation("androidx.lifecycle:lifecycle-livedata-ktx:2.9.4")
 
-    implementation("androidx.navigation:navigation-compose:2.8.5")
-    implementation("androidx.compose.material3:material3:1.2.0-rc01")
-    implementation("androidx.compose.material:material-icons-extended:1.7.6")
+    implementation("androidx.navigation:navigation-compose:2.9.5")
+    implementation("androidx.compose.material3:material3:1.4.0")
+    implementation("androidx.compose.material:material-icons-extended:1.7.8")
 
-    implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("io.coil-kt:coil-compose:2.7.0")
 
     implementation("com.google.android.gms:play-services-location:21.3.0")
 
-    implementation("com.google.accompanist:accompanist-permissions:0.32.0")
+    implementation("com.google.accompanist:accompanist-permissions:0.37.3")
 
     implementation("com.google.android.gms:play-services-ads:23.6.0")
 
     //Dagger Hilt
-    implementation("com.google.dagger:hilt-android:2.51.1")
-    kapt("com.google.dagger:hilt-compiler:2.51.1")
+    implementation("com.google.dagger:hilt-android:2.55")
+    kapt("com.google.dagger:hilt-compiler:2.55")
     implementation("androidx.hilt:hilt-navigation-compose:1.2.0")
 
     implementation("com.google.firebase:firebase-crashlytics")

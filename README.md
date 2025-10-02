@@ -42,17 +42,38 @@
 
 ### App Screenshots
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/ffa79c80-7950-48c4-81b3-299dd4e94645" width="200"/>
-  <img src="https://github.com/user-attachments/assets/d7728855-df77-4aef-b691-63581abe829b" width="200"/>
-  <img src="https://github.com/user-attachments/assets/d8b79c99-1433-43eb-92fd-a07c2e0e8ca8" width="200"/>
+  <img src="https://github.com/user-attachments/assets/93efa171-8443-4031-a4be-305fd9406826" width="200"/>
+  <img src="https://github.com/user-attachments/assets/251c2e5b-ff1d-4bb1-aaa6-32ca0bdc8e2b" width="200"/>
+  <img src="https://github.com/user-attachments/assets/4802366b-f41b-4968-b48c-0c3f31aab6e1" width="200"/>
 </p>
 
 <p align="center">
-  <img src="https://github.com/user-attachments/assets/845865b5-d722-4b13-9c0e-f8fcab417ba4" width="200"/>
-  <img src="https://github.com/user-attachments/assets/c3a54da8-8e50-42ab-9bb7-437fc6ea23a9" width="200"/>
-  <img src="https://github.com/user-attachments/assets/de588011-b2db-4ed1-89c5-4f69e6457e99" width="200"/>
+  <img src="https://github.com/user-attachments/assets/58c9e76e-d218-4c50-bd87-c67502c5ddb3" width="200"/>
+  <img src="https://github.com/user-attachments/assets/a7289df4-9b11-449e-b263-98f88604192a" width="200"/>
+  <img src="https://github.com/user-attachments/assets/b50e9e68-5a14-42a5-ad60-8b41db047f43" width="200"/>
 </p>
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/dbc55f71-c9ee-4ec0-9a5c-152dfc716403" width="200"/>
+  <img src="https://github.com/user-attachments/assets/8cf8dc14-31da-43c4-9ef8-ec47599b7c8e" width="200"/>
+  <img src="https://github.com/user-attachments/assets/861748a5-d0f0-4aa1-9375-691aa35c49d9" width="200"/>
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/e54c8dd1-880f-4fd8-97cf-7db62897da62" width="200"/>
+  <img src="https://github.com/user-attachments/assets/e024e042-c383-4748-8030-be641eef94cc" width="200"/>
+  <img src="https://github.com/user-attachments/assets/d431456e-ac3d-4db9-bfba-7fe960901754" width="200"/>
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/b4e44613-35cb-4a40-bded-f06b5ff7b65c" width="200"/>
+  <img src="https://github.com/user-attachments/assets/c7ea1b85-1a55-45c7-a8ef-fdcf1e42d19a" width="200"/>
+  <img src="https://github.com/user-attachments/assets/dacfb325-c8f0-4915-bf9e-4e3cc7eace9c" width="200"/>
+</p>
+
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/467b0284-dec9-4cf4-b52a-0a6b4768d03c" width="200"/>
+</p>
 ### UI Screens (Gallery)
 <p align="center">
   <img src="https://github.com/user-attachments/assets/95fdfe38-0ec9-4f8d-95c4-336bbc15a45d" width="250"/>
@@ -75,6 +96,8 @@
 https://github.com/user-attachments/assets/6260642f-9eec-4c02-bac7-8fbb7ef8b314
 
 https://github.com/user-attachments/assets/3f278d52-d554-4230-9586-989fa1811c8f
+
+https://github.com/user-attachments/assets/5dda7086-f83b-4b10-bd23-cc2dafd31aa7
 
 https://github.com/user-attachments/assets/f7845a7a-b73c-4d19-b4e3-e9c5c6203ce6
 

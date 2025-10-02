@@ -72,32 +72,11 @@
 
 ## 🎥 Demo Videos
 
-<p align="center">
-  <video width="500" controls>
-    <source src="https://github.com/user-attachments/assets/73ea9a49-9369-498b-bec6-a100c9a3a3d4" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-  <br>
-  <em>App walkthrough - Part 1</em>
-</p>
+https://github.com/user-attachments/assets/6260642f-9eec-4c02-bac7-8fbb7ef8b314
 
-<p align="center">
-  <video width="500" controls>
-    <source src="https://github.com/user-attachments/assets/d620d131-dc55-4b1e-a542-f8d872c50e6d" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-  <br>
-  <em>App walkthrough - Part 2</em>
-</p>
+https://github.com/user-attachments/assets/3f278d52-d554-4230-9586-989fa1811c8f
 
-<p align="center">
-  <video width="500" controls>
-    <source src="https://github.com/user-attachments/assets/eac9b73a-a735-49c9-8259-aa56f9ec9e97" type="video/mp4">
-    Your browser does not support the video tag.
-  </video>
-  <br>
-  <em>Admin Dashboard Demo</em>
-</p>
+https://github.com/user-attachments/assets/f7845a7a-b73c-4d19-b4e3-e9c5c6203ce6
 
 ---
 
